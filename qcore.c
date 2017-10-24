@@ -147,17 +147,6 @@ static  Request request;
 static  int     other_pid;
 static  StackFrame      *static_stackframe_pointer; //TODO: refactor again later when better understood
 
-
-void interrupt_handler(void)
-{
-	int ipending;
-	NIOS2_READ_IPENDING(ipending); // Read the interrupt
-	if (ipending & 0x1) // interval timer is interrupt level 0
-		interval_timer_isr();
-	if (ipending & 0x0300) {} // JTAG are interrupt level 8/9(?)
-		//TODO: JTAG UART interrupt service routine
-	return;
-}
 //review later
 //@interrupt      void    QuerkSWIHandler (void)
 void    interrupt_handler (void)
@@ -167,37 +156,30 @@ void    interrupt_handler (void)
 
 	/* First task: save user stack pointer in process control block. */
         /* Use embedded assembly language to copy SP in D, then into PDB. */
-		// TODO: change all assembly to make sense
-
+	// TODO: change all assembly to make sense
         running_process->user_stack_pointer	= (void *) _asm ("tfr sp,d"); // Save the stack pointer to the static_stackframe_pointer
-        static_stackframe_pointer		= (StackFrame *) running_process->user_stack_pointer; 
+        static_stackframe_pointer		= (StackFrame *) running_process->user_stack_pointer;
 
         /* Second task: switch to kernel stack by modifying stack pointer. */
         _asm ("tfr d,sp", kernel_stack_pointer);
 
-
         /* Third task: retrieve arguments for kernel call. */
         /* They are available on the user process stack. */
-		NIOS2_READ_IPENDING(ipending); // Read the interrupt
-		if (ipending & 0x1) // interval timer is interrupt level 0
-			interval_timer_isr();
-		if (ipending & 0x0300) { // JTAG are interrupt level 8/9(?)
-			//TODO: JTAG UART interrupt service routine
-		}
-		if (ipending & SOMEVALUE) { //Software interrupt for Relinquish
-			//TODO: replace value to and ipending
-			running_process->state = Ready;
-			AddToTail(&ready_queue, running_process);
-			need_dispatch = 1;       /* need dispatch of new process */
-		}
-		if (ipending & SOMEVALUE) { //Software interrupt for BlockSelf
-			//TODO: replace value to AND ipending for the software interrupt bit
-			need_dispatch = QuerkCoreBlockSelf();
-		}
-		if (ipending & SOMEVALUE) { //Software interrupt for QuerkCoreUnblock
-			//TODO: replace value to and ipending
-			need_dispatch = QuerkCoreUnblock(other_pid);
-		}
+        if (ipending & SOMEVALUE) { //Software interrupt for Relinquish
+                //TODO: replace value to and ipending
+                running_process->state = Ready;
+                AddToTail(&ready_queue, running_process);
+                need_dispatch = 1;       /* need dispatch of new process */
+        }
+        if (ipending & SOMEVALUE) { //Software interrupt for BlockSelf
+                //TODO: replace value to AND ipending for the software interrupt bit
+                need_dispatch = QuerkCoreBlockSelf();
+        }
+        if (ipending & SOMEVALUE) { //Software interrupt for QuerkCoreUnblock
+                //TODO: replace value to and ipending
+                need_dispatch = QuerkCoreUnblock(other_pid);
+        }
+
         /* Fifth task: decide if dispatching of new process is needed. */
         if (need_dispatch)
         {
@@ -206,8 +188,8 @@ void    interrupt_handler (void)
         }
 
         /* Sixth task: switch back to user stack pointer and return */
-		// TODO: change all assembly to make sense
-		kernel_stack_pointer = (void *) _asm ("tfr sp,d");
+	// TODO: change all assembly to make sense
+	kernel_stack_pointer = (void *) _asm ("tfr sp,d");
         _asm ("tfr d,sp", running_process->user_stack_pointer);
 
         /* compiler generates a return-from-interrupt instruction here. */

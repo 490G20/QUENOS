@@ -74,14 +74,14 @@ R20
 R21
 R22
 R23
-et  - Exception Temporary (NOT AVAILABLE IN USER MODE)
-bt	- Breakpoint Temporary (ONLY IN JTAG DEBUG MODULE)
-gp	- Global Pointer
-sp	- Stack Pointer
-fp	- Frame Pointer
-ea	- Exception Return Address (NOT AVAILABLE IN USER MODE)
-ba	- Breakpoint Return Address (ONLY IN JTAG DEBUG MODULE)
-ra	- Return Address
+24et  - Exception Temporary (NOT AVAILABLE IN USER MODE)
+25bt	- Breakpoint Temporary (ONLY IN JTAG DEBUG MODULE)
+26gp	- Global Pointer
+27sp	- Stack Pointer
+28fp	- Frame Pointer
+29ea	- Exception Return Address (NOT AVAILABLE IN USER MODE)
+30ba	- Breakpoint Return Address (ONLY IN JTAG DEBUG MODULE)
+31ra	- Return Address PC/ Program counter
 
 */
 
@@ -100,13 +100,13 @@ void    QuerkNewProcess (void (*entry_point) (void), char *stack_bottom,
         new_process		= &process_array[new_pid];	/* pointer to descriptor */
         new_process->pid	= new_pid;
         new_process->state	= Ready;
-        //new_process->user_stack_pointer		= stack_bottom + stack_size - sizeof (StackFrame);
+        new_process->user_stack_pointer		= stack_bottom + stack_size - sizeof (StackFrame);
 
         //update the stack frame pointer
-        //stackframe_pointer		= (StackFrame *) new_process->user_stack_pointer;
+        stackframe_pointer		= (StackFrame *) new_process->user_stack_pointer;
 
         //may need to change based on architecture/
-        //stackframe_pointer->PChi	= (unsigned char) (((int) entry_point & 0xff00) >> 8);
+		//stackframe_pointer->PChi	= (unsigned char) (((int) entry_point & 0xff00) >> 8);
         //stackframe_pointer->PClo	= (unsigned char) (((int) entry_point & 0x00ff));
         //stackframe_pointer->CCR	= (unsigned char) 0xc0; /* 11000000 in binary */
 
@@ -152,48 +152,39 @@ static  StackFrame      *static_stackframe_pointer; //TODO: refactor again later
 void    interrupt_handler (void)
 {
 	int ipending;
-        /* TODO: On entry, all user registers have been saved on process stack. */
+    /* On entry, all user registers must be saved to the process stack. */
+	QuerkSaveContext();
 
-	/* First task: save user stack pointer in process control block. */
-        /* Use embedded assembly language to copy SP in D, then into PDB. */
-	// TODO: change all assembly to make sense
-        running_process->user_stack_pointer	= (void *) _asm ("tfr sp,d"); // Save the stack pointer to the static_stackframe_pointer
-        static_stackframe_pointer		= (StackFrame *) running_process->user_stack_pointer;
+   
+    /* Third task: retrieve arguments for kernel call. */
+    /* They are available on the user process stack. */
+	NIOS2_READ_IPENDING(ipending); // Read the interrupt
 
-        /* Second task: switch to kernel stack by modifying stack pointer. */
-        _asm ("tfr d,sp", kernel_stack_pointer);
+	if (ipending & SOMEVALUE) { //Software interrupt for Relinquish
+		//TODO: replace value to and ipending
+		running_process->state = Ready;
+		AddToTail(&ready_queue, running_process);
+		need_dispatch = 1;       /* need dispatch of new process */
+	}
+	if (ipending & SOMEVALUE) { //Software interrupt for BlockSelf
+		//TODO: replace value to AND ipending for the software interrupt bit
+		need_dispatch = QuerkCoreBlockSelf();
+	}
+	if (ipending & SOMEVALUE) { //Software interrupt for QuerkCoreUnblock
+		//TODO: replace value to and ipending
+		need_dispatch = QuerkCoreUnblock(other_pid);
+	}
+    /* Fifth task: decide if dispatching of new process is needed. */
+    if (need_dispatch)
+    {
+            running_process = DequeueHead (&ready_queue);
+            running_process->state = Running;
+    }
 
-        /* Third task: retrieve arguments for kernel call. */
-        /* They are available on the user process stack. */
-        NIOS2_READ_IPENDING(ipending); // Read the interrupt
-        if (ipending & SOMEVALUE) { //Software interrupt for Relinquish
-                //TODO: replace value to and ipending
-                running_process->state = Ready;
-                AddToTail(&ready_queue, running_process);
-                need_dispatch = 1;       /* need dispatch of new process */
-        }
-        if (ipending & SOMEVALUE) { //Software interrupt for BlockSelf
-                //TODO: replace value to AND ipending for the software interrupt bit
-                need_dispatch = QuerkCoreBlockSelf();
-        }
-        if (ipending & SOMEVALUE) { //Software interrupt for QuerkCoreUnblock
-                //TODO: replace value to and ipending
-                need_dispatch = QuerkCoreUnblock(other_pid);
-        }
-
-        /* Fifth task: decide if dispatching of new process is needed. */
-        if (need_dispatch)
-        {
-                running_process = DequeueHead (&ready_queue);
-                running_process->state = Running;
-        }
-
-        /* Sixth task: switch back to user stack pointer and return */
-	// TODO: change all assembly to make sense
-	kernel_stack_pointer = (void *) _asm ("tfr sp,d");
-        _asm ("tfr d,sp", running_process->user_stack_pointer);
-
-        /* compiler generates a return-from-interrupt instruction here. */
+		
+        
+    /* compiler generates a return-from-interrupt instruction here. */
+	QuerkRestoreContext();
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an
@@ -214,81 +205,100 @@ void    interrupt_handler (void)
         /* compiler generates a return-from-interrupt instruction here. */
 }
 
-void QuerkContextSwitch(void) {
-	{
-		asm(".set noat"); // magic, for the C compiler
-		asm(".set nobreak"); // magic, for the C compiler
-		asm("subi sp, sp, 128");
-		asm("stw et, 96(sp)");
-		asm("rdctl et, ctl4");
-		asm("beq et, r0, SKIP_EA_DEC"); // interrupt is not external
-		asm("subi ea, ea, 4"); /* must decrement ea by one instruction for external
-							   * interrupts, so that the instruction will be run */
-		asm("SKIP_EA_DEC:");
-		asm("stw r1, 4(sp)"); // save all registers
-		asm("stw r2, 8(sp)");
-		asm("stw r3, 12(sp)");
-		asm("stw r4, 16(sp)");
-		asm("stw r5, 20(sp)");
-		asm("stw r6, 24(sp)");
-		asm("stw r7, 28(sp)");
-		asm("stw r8, 32(sp)");
-		asm("stw r9, 36(sp)");
-		asm("stw r10, 40(sp)");
-		asm("stw r11, 44(sp)");
-		asm("stw r12, 48(sp)");
-		asm("stw r13, 52(sp)");
-		asm("stw r14, 56(sp)");
-		asm("stw r15, 60(sp)");
-		asm("stw r16, 64(sp)");
-		asm("stw r17, 68(sp)");
-		asm("stw r18, 72(sp)");
-		asm("stw r19, 76(sp)");
-		asm("stw r20, 80(sp)");
-		asm("stw r21, 84(sp)");
-		asm("stw r22, 88(sp)");
-		asm("stw r23, 92(sp)");
-		asm("stw r25, 100(sp)"); // r25 = bt (skip r24 = et, because it was saved above)
-		asm("stw r26, 104(sp)"); // r26 = gp
-		asm("stw r27, 108(sp)"); // r27 = sp
-		asm("stw r28, 112(sp)"); // r28 = fp
-		asm("stw r29, 116(sp)"); // r29 = ea
-		asm("stw r30, 120(sp)"); // r30 = ba
-		asm("stw r31, 124(sp)"); // r31 = ra
-		asm("addi fp, sp, 128");
-		running_process->user_stack_pointer= 
-						asm("call interrupt_handler"); // call the C language interrupt handler
-		asm("ldw r1, 4(sp)"); // restore all registers
-		asm("ldw r2, 8(sp)");
-		asm("ldw r3, 12(sp)");
-		asm("ldw r4, 16(sp)");
-		asm("ldw r5, 20(sp)");
-		asm("ldw r6, 24(sp)");
-		asm("ldw r7, 28(sp)");
-		asm("ldw r8, 32(sp)");
-		asm("ldw r9, 36(sp)");
-		asm("ldw r10, 40(sp)");
-		asm("ldw r11, 44(sp)");
-		asm("ldw r12, 48(sp)");
-		asm("ldw r13, 52(sp)");
-		asm("ldw r14, 56(sp)");
-		asm("ldw r15, 60(sp)");
-		asm("ldw r16, 64(sp)");
-		asm("ldw r17, 68(sp)");
-		asm("ldw r18, 72(sp)");
-		asm("ldw r19, 76(sp)");
-		asm("ldw r20, 80(sp)");
-		asm("ldw r21, 84(sp)");
-		asm("ldw r22, 88(sp)");
-		asm("ldw r23, 92(sp)");
-		asm("ldw r24, 96(sp)");
-		asm("ldw r25, 100(sp)"); // r25 = bt
-		asm("ldw r26, 104(sp)"); // r26 = gp
-								 // skip r27 because it is sp, and we did not save this on the stack
-		asm("ldw r28, 112(sp)"); // r28 = fp
-		asm("ldw r29, 116(sp)"); // r29 = ea
-		asm("ldw r30, 120(sp)"); // r30 = ba
-		asm("ldw r31, 124(sp)"); // r31 = ra
-		asm("addi sp, sp, 128");
-		asm("eret");
+void QuerkSaveContext (void) {
+{
+	asm(".set noat"); // magic, for the C compiler
+	asm(".set nobreak"); // magic, for the C compiler
+	asm("subi sp, sp, 128");
+	asm("stw et, 96(sp)");
+	asm("rdctl et, ctl4");
+	asm("beq et, r0, SKIP_EA_DEC"); // interrupt is not external
+	asm("subi ea, ea, 4"); /* must decrement ea by one instruction for external
+							* interrupts, so that the instruction will be run */
+	asm("SKIP_EA_DEC:");
+	asm("stw r1, 4(sp)"); // save all registers
+	asm("stw r2, 8(sp)");
+	asm("stw r3, 12(sp)");
+	asm("stw r4, 16(sp)");
+	asm("stw r5, 20(sp)");
+	asm("stw r6, 24(sp)");
+	asm("stw r7, 28(sp)");
+	asm("stw r8, 32(sp)");
+	asm("stw r9, 36(sp)");
+	asm("stw r10, 40(sp)");
+	asm("stw r11, 44(sp)");
+	asm("stw r12, 48(sp)");
+	asm("stw r13, 52(sp)");
+	asm("stw r14, 56(sp)");
+	asm("stw r15, 60(sp)");
+	asm("stw r16, 64(sp)");
+	asm("stw r17, 68(sp)");
+	asm("stw r18, 72(sp)");
+	asm("stw r19, 76(sp)");
+	asm("stw r20, 80(sp)");
+	asm("stw r21, 84(sp)");
+	asm("stw r22, 88(sp)");
+	asm("stw r23, 92(sp)");
+	asm("stw r25, 100(sp)"); // r25 = bt (skip r24 = et, because it was saved above)
+	asm("stw r26, 104(sp)"); // r26 = gp
+	asm("stw r27, 108(sp)"); // r27 = sp
+	asm("stw r28, 112(sp)"); // r28 = fp
+	asm("stw r29, 116(sp)"); // r29 = ea
+	asm("stw r30, 120(sp)"); // r30 = ba
+	asm("stw r31, 124(sp)"); // r31 = ra
+	asm("addi fp, sp, 128");
+
+	/* Use embedded assembly language to copy SP in D, then into PDB. */
+	// TODO: change all assembly to make sense
+
+	running_process->user_stack_pointer = (void *) _asm ("tfr sp,d"); // Save the stack pointer to the static_stackframe_pointer
+	static_stackframe_pointer = (StackFrame *)running_process->user_stack_pointer;
+
+	/* Second task: switch to kernel stack by modifying stack pointer. */
+	_asm ("tfr d,sp", kernel_stack_pointer);
+	register int sp asm("sp");
+	running_process->user_stack_pointer = sp;
 }
+
+void QuerkRestoreContext(void) {
+
+	/* Sixth task: switch back to user stack pointer and return */
+	// TODO: change all assembly to make sense
+	kernel_stack_pointer = (void *) _asm ("tfr sp,d");
+	_asm ("tfr d,sp", running_process->user_stack_pointer);
+
+	asm("ldw r1, 4(sp)"); // restore all registers
+	asm("ldw r2, 8(sp)");
+	asm("ldw r3, 12(sp)");
+	asm("ldw r4, 16(sp)");
+	asm("ldw r5, 20(sp)");
+	asm("ldw r6, 24(sp)");
+	asm("ldw r7, 28(sp)");
+	asm("ldw r8, 32(sp)");
+	asm("ldw r9, 36(sp)");
+	asm("ldw r10, 40(sp)");
+	asm("ldw r11, 44(sp)");
+	asm("ldw r12, 48(sp)");
+	asm("ldw r13, 52(sp)");
+	asm("ldw r14, 56(sp)");
+	asm("ldw r15, 60(sp)");
+	asm("ldw r16, 64(sp)");
+	asm("ldw r17, 68(sp)");
+	asm("ldw r18, 72(sp)");
+	asm("ldw r19, 76(sp)");
+	asm("ldw r20, 80(sp)");
+	asm("ldw r21, 84(sp)");
+	asm("ldw r22, 88(sp)");
+	asm("ldw r23, 92(sp)");
+	asm("ldw r24, 96(sp)");
+	asm("ldw r25, 100(sp)"); // r25 = bt
+	asm("ldw r26, 104(sp)"); // r26 = gp
+								// skip r27 because it is sp, and we did not save this on the stack
+	asm("ldw r28, 112(sp)"); // r28 = fp
+	asm("ldw r29, 116(sp)"); // r29 = ea
+	asm("ldw r30, 120(sp)"); // r30 = ba
+	asm("ldw r31, 124(sp)"); // r31 = ra
+	asm("addi sp, sp, 128");
+	asm("eret");
+}
+

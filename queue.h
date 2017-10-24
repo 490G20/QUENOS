@@ -9,15 +9,14 @@ DESCRIPTION:	Declarations for process descriptor queue management functions.
 		Department of Electrical and Computer Engineering
 		Queen's University
 ******************************************************************************/
-
 typedef struct  _queue
 {
-        PDB     *head;
-        PDB     *tail;
+        Process     *head;
+        Process     *tail;
 } Queue;
 
-extern  void    AddToTail (Queue *queue, PDB *pdb);
-extern  PDB     *DequeueHead (Queue *queue);
+extern  void    AddToTail (Queue *queue, Process *process);
+extern  Process     *DequeueHead (Queue *queue);
 
 #endif /* _QUEUE_H_ */
 

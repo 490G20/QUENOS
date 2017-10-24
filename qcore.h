@@ -13,16 +13,17 @@ DESCRIPTION:	Type definitions and function declarations for core of
 
 typedef enum {Ready, Running, Blocked} State;
 
-typedef struct  _pdb
+typedef struct  _process // Formerly _pdb
 {
-        struct  _pdb    *prev;
-        struct  _pdb    *next;
-        int     pid;
+        struct  _process    *prev;
+        struct  _process    *next;
+        int     pid; // process id
         State   state;
-        void    *SP;		/* saves user stack pointer when not running */
-} PDB;
+		// TODO: Best to name user stack pointer or stack pointer? formerly just SP
+        void    *user_stack_pointer;		/* saves user stack pointer when not running */
+} Process; // Formerly pdb
 
-#define MAX_PDB 16
+#define MAX_NUM_OF_PROCESSES 16
 
 extern  void    QuerkNewProcess (void (*entry_point) (void),
 				 char *stack_bottom, int stack_size);

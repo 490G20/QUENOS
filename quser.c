@@ -23,11 +23,14 @@ static  char    P2stack[USER_STACK_SIZE];
 
 /*----------------------------------------------------------------*/
 
+//From manji: You will need to produce a basic operational Nios II kernel that can handle a couple of simple processes
+// that relinquish/block/unblock in the manner reflected in the sample quser.c file in the above package.
+// Then extend basic
 static	void    Process1 (void)
 {
         for (;;)
         {
-                QuerkBlockSelf ();
+                QuerkBlockSelf (); //TODO: find this method's definition, is it in qrequest or qcore? issue possibly with IDE not recognizing connection
         }
 }
 
@@ -35,8 +38,8 @@ static	void    Process2 (void)
 {
         for (;;)
         {
-		QuerkUnblock (1);
-                QuerkRelinquish ();
+			QuerkUnblock (1);
+			QuerkRelinquish ();
         }
 }
 
@@ -46,5 +49,5 @@ static	void    Process2 (void)
 void	UserProcesses (void)
 {
 	QuerkNewProcess (Process1, P1stack, USER_STACK_SIZE);
-        QuerkNewProcess (Process2, P2stack, USER_STACK_SIZE);
+    QuerkNewProcess (Process2, P2stack, USER_STACK_SIZE);
 }

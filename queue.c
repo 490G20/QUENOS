@@ -12,20 +12,20 @@ DESCRIPTION:	Definitions of process descriptor queue management functions.
 
 /*----------------------------------------------------------------*/
 
-void    AddToTail (Queue *queue, PDB *pdb)
+void    AddToTail (Queue *queue, Process *process)
 {
-        pdb->prev = queue->tail;
-        pdb->next = 0;
+        process->prev = queue->tail;
+        process->next = 0;
         if (queue->head != 0)
-                queue->tail->next = pdb;
+                queue->tail->next = process;
         else
-                queue->head = pdb;
-        queue->tail = pdb;
+                queue->head = process;
+        queue->tail = process;
 }
 
-PDB     *DequeueHead (Queue *queue)
+Process     *DequeueHead (Queue *queue)
 {
-        PDB     *ret;
+        Process     *ret;
 
         ret = queue->head;
         if (ret == 0)

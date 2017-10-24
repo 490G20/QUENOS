@@ -10,6 +10,7 @@ DESCRIPTION:	Useful declarations for accessing routines in DBug-12 monitor
 
 ******************************************************************************/
 
+//TODO: rewrite the entire file
 /*---- select one of the following ----*/
 
 /* #define Version 104 */ /*--- for Motorola 68HC12A4EVB ---*/
@@ -58,6 +59,7 @@ typedef enum    Vect
 
 /* structure defining functions in D-Bug12 pointer table */
 
+//list of utility functions available to motorola platform only and defined elsewhere?
 typedef struct
 {
         void    (*DB12main) (void);

@@ -1,2 +1,2 @@
 # QUENOS
-# Queens University Educational Nios Operating System
+Queens University Educational Nios Operating System

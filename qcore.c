@@ -112,7 +112,7 @@ void    QuerkNewProcess (void (*entry_point) (void), char *stack_bottom,
 
         AddToTail (&ready_queue, new_process);
 }
-        
+
 /*----------------------------------------------------------------*/
 /* functions for kernel services */
 
@@ -132,7 +132,7 @@ static  int     QuerkCoreUnblock (int other_pid)
 	}
         return 0;       /* no dispatch of new process */
 }
- 
+
 /*----------------------------------------------------------------*/
 /* software interrupt routines */
 
@@ -165,6 +165,7 @@ void    interrupt_handler (void)
 
         /* Third task: retrieve arguments for kernel call. */
         /* They are available on the user process stack. */
+        NIOS2_READ_IPENDING(ipending); // Read the interrupt
         if (ipending & SOMEVALUE) { //Software interrupt for Relinquish
                 //TODO: replace value to and ipending
                 running_process->state = Ready;

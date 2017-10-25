@@ -177,7 +177,6 @@ void    interrupt_handler (void)
                 need_dispatch = QuerkCoreBlockSelf();
         }
         if (ipending & 0x4) { //Software interrupt for QuerkCoreUnblock
-			//
                 need_dispatch = QuerkCoreUnblock(other_pid);
         }
 

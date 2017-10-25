@@ -160,24 +160,24 @@ void    interrupt_handler (void)
         running_process->user_stack_pointer	= (void *) _asm ("tfr sp,d"); // Save the stack pointer to the static_stackframe_pointer
         static_stackframe_pointer		= (StackFrame *) running_process->user_stack_pointer;
 
+	// TODO: retrieve other_pid from stackpointer
+
         /* Second task: switch to kernel stack by modifying stack pointer. */
         _asm ("tfr d,sp", kernel_stack_pointer);
 
         /* Third task: retrieve arguments for kernel call. */
         /* They are available on the user process stack. */
         NIOS2_READ_IPENDING(ipending); // Read the interrupt
-        if (ipending & SOMEVALUE) { //Software interrupt for Relinquish
-                //TODO: replace value to and ipending
+        if (ipending & 0x1) { //Software interrupt for Relinquish
                 running_process->state = Ready;
                 AddToTail(&ready_queue, running_process);
                 need_dispatch = 1;       /* need dispatch of new process */
         }
-        if (ipending & SOMEVALUE) { //Software interrupt for BlockSelf
-                //TODO: replace value to AND ipending for the software interrupt bit
+        if (ipending & 0x2) { //Software interrupt for BlockSelf
                 need_dispatch = QuerkCoreBlockSelf();
         }
-        if (ipending & SOMEVALUE) { //Software interrupt for QuerkCoreUnblock
-                //TODO: replace value to and ipending
+        if (ipending & 0x4) { //Software interrupt for QuerkCoreUnblock
+			//
                 need_dispatch = QuerkCoreUnblock(other_pid);
         }
 

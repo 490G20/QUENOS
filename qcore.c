@@ -160,17 +160,18 @@ void    interrupt_handler (void)
     /* They are available on the user process stack. */
 	NIOS2_READ_IPENDING(ipending); // Read the interrupt
 
-	if (ipending & SOMEVALUE) { //Software interrupt for Relinquish
+    //TODO: Set other_pid
+	if (ipending & 0x1) { //Software interrupt for Relinquish
 		//TODO: replace value to and ipending
 		running_process->state = Ready;
 		AddToTail(&ready_queue, running_process);
 		need_dispatch = 1;       /* need dispatch of new process */
 	}
-	if (ipending & SOMEVALUE) { //Software interrupt for BlockSelf
+	if (ipending & 0x2) { //Software interrupt for BlockSelf
 		//TODO: replace value to AND ipending for the software interrupt bit
 		need_dispatch = QuerkCoreBlockSelf();
 	}
-	if (ipending & SOMEVALUE) { //Software interrupt for QuerkCoreUnblock
+	if (ipending & 0x4) { //Software interrupt for QuerkCoreUnblock
 		//TODO: replace value to and ipending
 		need_dispatch = QuerkCoreUnblock(other_pid);
 	}

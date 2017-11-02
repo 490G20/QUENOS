@@ -20,21 +20,57 @@ DESCRIPTION:	Definitions for functions to request specific kernel services.
 		Queen's University
 ******************************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <memory.h>
 #include "qrequest.h"
 
 void    QuerkRelinquish (void)
 {
-        _asm ("addd #0\nswi", ((unsigned int) Relinquish << 8));
+    asm("subi sp, sp, 4");
+    asm("add r23,r23,r0");
+    asm("addi r23,1"); //Relinquish enum
+    asm("stw r23, 4(sp)");
+    asm("trap");
 }
 
 void    QuerkBlockSelf (void)
 {
-        _asm ("addd #0\nswi", ((unsigned int) BlockSelf << 8));
+    asm("subi sp, sp, 4");
+    asm("add r23,r23,r0");
+    asm("addi r23,2 #block self enum");
+    asm("stw r23, 4(sp)");
+    asm("trap");
 }
 
 void    QuerkUnblock (int other_pid)
 {
-        _asm ("addd #0\nswi",
-              ((unsigned int) Unblock << 8) | other_pid);
+
+    asm("subi sp, sp, 8");
+
+    // Convert other_pid into a string and concat it in
+    
+    int length = snprintf(null, 0, "%d", other_pid);
+    char* str = malloc (length +1); //1 extra character for null terminator
+    //TODO: Check errors in malloc
+    snprintf(str, length+1, "%d", other_pid);
+
+    char assembly_command[] = "movi r22,";
+
+    char *completed_command = malloc(strlen(assembly_command) + strlen(str) +1);
+    //TODO: Check for errors in malloc
+    strcpy(completed_command, assembly_command);
+    strcat(completed_command, str);
+
+    asm(completed_command);
+
+    asm("add r23,r23,r0");
+    asm("addi r23,3");
+    asm("stw r23, 4(sp)");
+    asm("stw r22, 8(sp)\"); #TODO: update this line of code to use the correct register
+    asm("trap");
+
+    free(str);
+    free(completed_command);
 }
 

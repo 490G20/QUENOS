@@ -49,7 +49,7 @@ void    QuerkUnblock (int other_pid)
     asm("subi sp, sp, 8");
 
     // Convert other_pid into a string and concat it in
-    
+
     int length = snprintf(null, 0, "%d", other_pid);
     char* str = malloc (length +1); //1 extra character for null terminator
     //TODO: Check errors in malloc

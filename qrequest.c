@@ -38,10 +38,16 @@ void    QuerkBlockSelf (void)
 {
     asm("subi sp, sp, 4");
     asm("add r23,r23,r0");
-    asm("addi r23,2 #block self enum");
+    asm("addi r23,2"); // #block self enum
     asm("stw r23, 4(sp)");
     asm("trap");
 }
+
+/**
+ *
+ * We will see if we will need to use the specific register that is the 1st argument in a C
+ * call to assembly instead of arbitrarily using our choice of r22
+ */
 
 void    QuerkUnblock (int other_pid)
 {
@@ -65,9 +71,9 @@ void    QuerkUnblock (int other_pid)
     asm(completed_command);
 
     asm("add r23,r23,r0");
-    asm("addi r23,3");
+    asm("addi r23,3"); //unblock enum
     asm("stw r23, 4(sp)");
-    asm("stw r22, 8(sp)\"); #TODO: update this line of code to use the correct register
+    asm("stw r22, 8(sp)");
     asm("trap");
 
     free(str);

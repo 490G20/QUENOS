@@ -222,9 +222,6 @@ void QuerkSaveContext (void) {
 	asm("subi ea, ea, 4"); /* must decrement ea by one instruction for external
 							* interrupts, so that the instruction will be run */
 
-    register int generalRegister22Contents asm("r22");
-    other_pid = generalRegister22Contents;
-
 	asm("SKIP_EA_DEC:");
 	asm("stw r1, 4(sp)"); // save all registers
 	asm("stw r2, 8(sp)");

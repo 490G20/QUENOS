@@ -144,11 +144,18 @@ static  int     QuerkCoreUnblock (int other_pid)
 
 static  int     need_dispatch;
 static  Request request;
-static  int     other_pid;
-static  StackFrame      *static_stackframe_pointer; //TODO: refactor again later when better understood
+static  int other_pid;
+static  StackFrame      *static_stackframe_pointer; 
 
-//review later
-//@interrupt      void    QuerkSWIHandler (void)
+void the_exception(void) {
+	register int otherpidRegister asm("r22");	//read other pid for unblock
+	register int requestTypeRegister asm("r23");	//read the type of request to determine what type of request is being made
+
+}
+
+
+// This is called directly called by the DE2 hardware when a hardware interrupt occurs,
+// It is also called indirectly by the_exception(), the software interrupt 
 void    interrupt_handler (void)
 {
 	int ipending;
@@ -160,30 +167,28 @@ void    interrupt_handler (void)
     /* They are available on the user process stack. */
 	NIOS2_READ_IPENDING(ipending); // Read the interrupt
 
-    //TODO: Set other_pid
-	if (ipending & 0x1) { //Software interrupt for Relinquish
-		//TODO: replace value to and ipending
-		running_process->state = Ready;
-		AddToTail(&ready_queue, running_process);
-		need_dispatch = 1;       /* need dispatch of new process */
+	if (ipending) {
+		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
 	}
-	if (ipending & 0x2) { //Software interrupt for BlockSelf
-		//TODO: replace value to AND ipending for the software interrupt bit
-		need_dispatch = QuerkCoreBlockSelf();
-	}
-	if (ipending & 0x4) { //Software interrupt for QuerkCoreUnblock
-		//TODO: replace value to and ipending
-		need_dispatch = QuerkCoreUnblock(other_pid);
-	}
-    /* Fifth task: decide if dispatching of new process is needed. */
-    if (need_dispatch)
-    {
-            running_process = DequeueHead (&ready_queue);
-            running_process->state = Running;
-    }
-
-		
-        
+	else {
+		if (requestTypeRegister == Relinquish) {
+			running_process->state = Ready;
+			AddToTail(&ready_queue, running_process);
+			need_dispatch = 1;       /* need dispatch of new process */
+		}
+		else if (requestTypeRegister == BlockSelf) {
+			need_dispatch = QuerkCoreBlockSelf();
+		}
+		else if (requestTypeRegister == Unblock){
+			need_dispatch = QuerkCoreUnblock(other_pid);
+		}
+		/* Fifth task: decide if dispatching of new process is needed. */
+		if (need_dispatch)
+		{
+			running_process = DequeueHead(&ready_queue);
+			running_process->state = Running;
+		}
+	}       
     /* compiler generates a return-from-interrupt instruction here. */
 	QuerkRestoreContext();
 }

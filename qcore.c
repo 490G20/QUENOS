@@ -1,4 +1,4 @@
-	/******************************************************************************
+/******************************************************************************
 NAME:		qcore.c
 DESCRIPTION:	The core of the QUERK kernel. Includes the software interrupt
 		handler, code to create new processes, and code to perform the
@@ -26,26 +26,6 @@ static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
 static  int     num_of_processes = 0;	/* counter used to assign unique pids */
 
 static  Process     process_array[MAX_NUM_OF_PROCESSES]; // Formerly pdb_array
-
-/* This structure is used to set the initial contents of the stack
-   when creating a new process, and also to retrieve parameters on
-   entry to the software interrupt handler. */
-
-typedef struct  _stackframe //all the registers
-{
-    //TODO: investigate if architecture specific and review 274
-    /* the order is important here... */
-        unsigned char   CCR,	//condition code register
-                        B, // SWI register containing the process calling the interrupt
-                        A,	//SWI Register holding the type of interrupt (In this program 000,001,010)
-							// Also, this turns out to be th upper 4 bits of D, whcih is why we use ADDD #0 in qrequest
-                        Xhi, //register x hi __ bits
-                        Xlo,
-                        Yhi,
-                        Ylo,
-                        PChi, //program counter
-                        PClo;
-} StackFrame;
 
 /*
 List of all registers:
@@ -89,10 +69,9 @@ R23
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
 
-void    QuerkNewProcess (void (*entry_point) (void), char *stack_bottom,
+void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
                          int stack_size)
 {
-        //StackFrame      *stackframe_pointer; // Formerly sfp
         int             new_pid = num_of_processes++;	/* assign new pid */
         Process             *new_process; // Formerly pdb
 
@@ -100,15 +79,7 @@ void    QuerkNewProcess (void (*entry_point) (void), char *stack_bottom,
         new_process		= &process_array[new_pid];	/* pointer to descriptor */
         new_process->pid	= new_pid;
         new_process->state	= Ready;
-        new_process->user_stack_pointer		= stack_bottom + stack_size - sizeof (StackFrame);
-
-        //update the stack frame pointer
-        stackframe_pointer		= (StackFrame *) new_process->user_stack_pointer;
-
-        //may need to change based on architecture/
-		//stackframe_pointer->PChi	= (unsigned char) (((int) entry_point & 0xff00) >> 8);
-        //stackframe_pointer->PClo	= (unsigned char) (((int) entry_point & 0x00ff));
-        //stackframe_pointer->CCR	= (unsigned char) 0xc0; /* 11000000 in binary */
+        new_process->user_stack_pointer		= stack_bottom + stack_size; // XXX: Confirm that this is correct
 
         AddToTail (&ready_queue, new_process);
 }
@@ -116,13 +87,13 @@ void    QuerkNewProcess (void (*entry_point) (void), char *stack_bottom,
 /*----------------------------------------------------------------*/
 /* functions for kernel services */
 
-static  int     QuerkCoreBlockSelf (void)
+static  int     QuenosCoreBlockSelf (void)
 {
         running_process->state = Blocked;
         return 1;       /* need dispatch of new process */
 }
 
-static  int     QuerkCoreUnblock (int other_pid)
+static  int     QuenosCoreUnblock (int other_pid)
 {
 	if (process_array[other_pid].state == Blocked)
 	{
@@ -145,7 +116,6 @@ static  int     QuerkCoreUnblock (int other_pid)
 static  int     need_dispatch;
 static  Request request;
 static  int other_pid;
-static  StackFrame      *static_stackframe_pointer; 
 
 void the_exception(void) {
 	register int otherpidRegister asm("r22");	//read other pid for unblock
@@ -153,16 +123,14 @@ void the_exception(void) {
 
 }
 
-
 // This is called directly called by the DE2 hardware when a hardware interrupt occurs,
-// It is also called indirectly by the_exception(), the software interrupt 
+// It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void)
 {
 	int ipending;
     /* On entry, all user registers must be saved to the process stack. */
-	QuerkSaveContext();
+	QuenosSaveContext();
 
-   
     /* Third task: retrieve arguments for kernel call. */
     /* They are available on the user process stack. */
 	NIOS2_READ_IPENDING(ipending); // Read the interrupt
@@ -177,10 +145,10 @@ void    interrupt_handler (void)
 			need_dispatch = 1;       /* need dispatch of new process */
 		}
 		else if (requestTypeRegister == BlockSelf) {
-			need_dispatch = QuerkCoreBlockSelf();
+			need_dispatch = QuenosCoreBlockSelf();
 		}
 		else if (requestTypeRegister == Unblock){
-			need_dispatch = QuerkCoreUnblock(other_pid);
+			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
 		/* Fifth task: decide if dispatching of new process is needed. */
 		if (need_dispatch)
@@ -188,9 +156,9 @@ void    interrupt_handler (void)
 			running_process = DequeueHead(&ready_queue);
 			running_process->state = Running;
 		}
-	}       
+	}
     /* compiler generates a return-from-interrupt instruction here. */
-	QuerkRestoreContext();
+	QuenosRestoreContext();
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an
@@ -198,8 +166,8 @@ void    interrupt_handler (void)
    ready process to run. It is declared as an interrupt function only
    to generate a return-from-interrupt instruction. */
 
-//@interrupt	void    QuerkDispatch (void)
-	void    QuerkDispatch (void)
+//@interrupt	void    QuenosDispatch (void)
+	void    QuenosDispatch (void)
 
 {
         running_process = DequeueHead (&ready_queue);
@@ -211,7 +179,7 @@ void    interrupt_handler (void)
         /* compiler generates a return-from-interrupt instruction here. */
 }
 
-void QuerkSaveContext (void) {
+void QuenosSaveContext (void) {
 {
 	asm(".set noat"); // magic, for the C compiler
 	asm(".set nobreak"); // magic, for the C compiler
@@ -259,7 +227,6 @@ void QuerkSaveContext (void) {
 	// TODO: change all assembly to make sense
 
 	running_process->user_stack_pointer = (void *) _asm ("tfr sp,d"); // Save the stack pointer to the static_stackframe_pointer
-	static_stackframe_pointer = (StackFrame *)running_process->user_stack_pointer;
 
 	/* Second task: switch to kernel stack by modifying stack pointer. */
 	_asm ("tfr d,sp", kernel_stack_pointer);
@@ -267,7 +234,7 @@ void QuerkSaveContext (void) {
 	running_process->user_stack_pointer = sp;
 }
 
-void QuerkRestoreContext(void) {
+void QuenosRestoreContext(void) {
 
 	/* Sixth task: switch back to user stack pointer and return */
 	// TODO: change all assembly to make sense

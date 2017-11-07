@@ -10,6 +10,6 @@ DESCRIPTION:	Declarations for initialization code on startup.
 		Queen's University
 ******************************************************************************/
 
-extern  void    QuerkInit (void);
+extern  void    QuenosInit (void);
 
 #endif /* _QINIT_H_ */

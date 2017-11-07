@@ -25,7 +25,7 @@ DESCRIPTION:	Definitions for functions to request specific kernel services.
 #include <memory.h>
 #include "qrequest.h"
 
-void    QuerkRelinquish (void)
+void    QuenosRelinquish (void)
 {
     asm("subi sp, sp, 4");
     asm("add r23,r23,r0");
@@ -34,7 +34,7 @@ void    QuerkRelinquish (void)
     asm("trap");
 }
 
-void    QuerkBlockSelf (void)
+void    QuenosBlockSelf (void)
 {
     asm("subi sp, sp, 4");
     asm("add r23,r23,r0");
@@ -49,7 +49,7 @@ void    QuerkBlockSelf (void)
  * call to assembly instead of arbitrarily using our choice of r22
  */
 
-void    QuerkUnblock (int other_pid)
+void    QuenosUnblock (int other_pid)
 {
 
     asm("subi sp, sp, 8");

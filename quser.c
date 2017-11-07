@@ -30,7 +30,7 @@ static	void    Process1 (void)
 {
         for (;;)
         {
-                QuerkBlockSelf (); //TODO: find this method's definition, is it in qrequest or qcore? issue possibly with IDE not recognizing connection
+                QuenosBlockSelf (); //TODO: find this method's definition, is it in qrequest or qcore? issue possibly with IDE not recognizing connection
         }
 }
 
@@ -38,8 +38,8 @@ static	void    Process2 (void)
 {
         for (;;)
         {
-			QuerkUnblock (1);
-			QuerkRelinquish ();
+			QuenosUnblock (1);
+			QuenosRelinquish ();
         }
 }
 
@@ -48,6 +48,6 @@ static	void    Process2 (void)
 
 void	UserProcesses (void)
 {
-	QuerkNewProcess (Process1, P1stack, USER_STACK_SIZE);
-    QuerkNewProcess (Process2, P2stack, USER_STACK_SIZE);
+	QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
+    QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
 }

@@ -27,16 +27,16 @@ static  char    NullProcessStack[NULL_PROCESS_STACK_SIZE];
 
 void    NullProcess (void)
 {
-	QuerkRelinquish ();	/* null process simply surrenders processor */
+	QuenosRelinquish ();	/* null process simply surrenders processor */
 }
 
 int     main ()
 {
         /* initialize interrupt vectors and any other things... */
-        QuerkInit ();
+        QuenosInit ();
 
         /* create null process and add to ready queue */
-        QuerkNewProcess (NullProcess, NullProcessStack,
+        QuenosNewProcess (NullProcess, NullProcessStack,
                          NULL_PROCESS_STACK_SIZE);
 
         /* create user processes and add to ready queue */
@@ -46,5 +46,5 @@ int     main ()
         cli ();
 
         /* start up the first process (we never return here) */
-        QuerkDispatch ();
+        QuenosDispatch ();
 }

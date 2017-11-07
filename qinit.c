@@ -11,7 +11,7 @@ DESCRIPTION:	Definition of function for initialization on startup.
 #include "DBug12.h"
 #include "nios2_ctrl_reg_macros.h"
 
-void    QuerkInit (void)
+void    QuenosInit (void)
 {
 	/* set the software interrupt vector to enter the kernel */
 

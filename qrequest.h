@@ -13,9 +13,9 @@ DESCRIPTION:	Declarations for functions to request specific kernel services.
 
 typedef enum    {Relinquish, BlockSelf, Unblock} Request;
 
-extern	void    QuerkRelinquish (void);
-extern	void    QuerkBlockSelf (void);
-extern	void    QuerkUnblock (int other_pid);
+extern	void    QuenosRelinquish (void);
+extern	void    QuenosBlockSelf (void);
+extern	void    QuenosUnblock (int other_pid);
 
 #endif _QREQUEST_H_
 

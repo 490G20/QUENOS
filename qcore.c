@@ -20,6 +20,9 @@ static  Process     *running_process;
 
 static  Queue   ready_queue;
 
+static  int other_pid;
+static	int requestType;
+
 static  char    kernel_stack[512];
 static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
 
@@ -115,11 +118,13 @@ static  int     QuenosCoreUnblock (int other_pid)
 
 static  int     need_dispatch;
 static  Request request;
-static  int other_pid;
+
 
 void the_exception(void) {
 	register int otherpidRegister asm("r22");	//read other pid for unblock
 	register int requestTypeRegister asm("r23");	//read the type of request to determine what type of request is being made
+	other_pid=otherpidRegister;
+	requestType=requestTypeRegister;
 
 }
 
@@ -139,15 +144,15 @@ void    interrupt_handler (void)
 		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
 	}
 	else {
-		if (requestTypeRegister == Relinquish) {
+		if (requestType == Relinquish) {
 			running_process->state = Ready;
 			AddToTail(&ready_queue, running_process);
 			need_dispatch = 1;       /* need dispatch of new process */
 		}
-		else if (requestTypeRegister == BlockSelf) {
+		else if (requestType == BlockSelf) {
 			need_dispatch = QuenosCoreBlockSelf();
 		}
-		else if (requestTypeRegister == Unblock){
+		else if (requestType == Unblock){
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
 		/* Fifth task: decide if dispatching of new process is needed. */

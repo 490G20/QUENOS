@@ -43,7 +43,7 @@ int     main ()
         UserProcesses ();
 
         /* enable all interrupts */
-        cli ();
+        cli();
 
         /* start up the first process (we never return here) */
         QuenosDispatch ();

@@ -1,6 +1,7 @@
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
+#include "qcore.h"
 /******************************************************************************
 NAME:		queue.h
 DESCRIPTION:	Declarations for process descriptor queue management functions.

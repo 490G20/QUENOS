@@ -56,7 +56,7 @@ void    QuenosUnblock (int other_pid)
 
     // Convert other_pid into a string and concat it in
 
-    int length = snprintf(null, 0, "%d", other_pid);
+    int length = snprintf(NULL, 0, "%d", other_pid);
     char* str = malloc (length +1); //1 extra character for null terminator
     //TODO: Check errors in malloc
     snprintf(str, length+1, "%d", other_pid);
@@ -68,7 +68,7 @@ void    QuenosUnblock (int other_pid)
     strcpy(completed_command, assembly_command);
     strcat(completed_command, str);
 
-    asm(completed_command);
+    __asm(completed_command);
 
     asm("add r23,r23,r0");
     asm("addi r23,3"); //unblock enum

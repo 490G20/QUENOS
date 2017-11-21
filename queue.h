@@ -9,6 +9,8 @@ DESCRIPTION:	Declarations for process descriptor queue management functions.
 		Department of Electrical and Computer Engineering
 		Queen's University
 ******************************************************************************/
+#include "qcore.h"
+
 typedef struct  _queue
 {
         Process     *head;

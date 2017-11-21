@@ -15,6 +15,7 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 
 #include "quser.h"
 #include "qcore.h"
+#include "qrequest.h"
 
 #define USER_STACK_SIZE 256
 

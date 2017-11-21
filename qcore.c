@@ -20,9 +20,6 @@ static  Process     *running_process;
 
 static  Queue   ready_queue;
 
-static  int other_pid;
-static	int requestType;
-
 static  char    kernel_stack[512];
 static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
 
@@ -118,16 +115,6 @@ static  int     QuenosCoreUnblock (int other_pid)
 
 static  int     need_dispatch;
 static  Request request;
-
-
-void the_exception(void) {
-    //TODO: Is compiler error about invalid register name valid?
-	register int otherpidRegister asm("r22");	//read other pid for unblock
-	register int requestTypeRegister asm("r23");	//read the type of request to determine what type of request is being made
-	other_pid=otherpidRegister;
-	requestType=requestTypeRegister;
-
-}
 
 void QuenosSaveContext (void) {
     asm(".set noat"); // magic, for the C compiler
@@ -229,9 +216,12 @@ void QuenosRestoreContext(void) {
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void)
 {
-	int ipending;
     /* On entry, all user registers must be saved to the process stack. */
 	QuenosSaveContext();
+
+	register int other_pid asm("r22");
+	register int requestType asm("r23");
+	int ipending;
 
     /* Third task: retrieve arguments for kernel call. */
     /* They are available on the user process stack. */
@@ -261,6 +251,11 @@ void    interrupt_handler (void)
 	}
     /* compiler generates a return-from-interrupt instruction here. */
 	QuenosRestoreContext();
+}
+
+void the_exception(void) __attribute__ ((section (".exceptions")));
+void the_exception(void) {
+	interrupt_handler();
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an

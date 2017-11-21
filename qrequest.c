@@ -22,7 +22,8 @@ DESCRIPTION:	Definitions for functions to request specific kernel services.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
+//#include <memory.h>
+#include <string.h>
 #include "qrequest.h"
 
 void    QuenosRelinquish (void)
@@ -68,7 +69,7 @@ void    QuenosUnblock (int other_pid)
     strcpy(completed_command, assembly_command);
     strcat(completed_command, str);
 
-    __asm(completed_command);
+    _asm(completed_command); //String literal and other problems, perhaps we must do as originally suggested with the full assembly, and compiler register convention tricks
 
     asm("add r23,r23,r0");
     asm("addi r23,3"); //unblock enum

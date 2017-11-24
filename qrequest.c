@@ -30,7 +30,7 @@ void    QuenosRelinquish (void)
 {
     asm("subi sp, sp, 4");
     asm("add r23,r23,r0");
-    asm("addi r23,1"); //Relinquish enum
+    asm("addi r23, r23, 1"); //Relinquish enum
     asm("stw r23, 4(sp)");
     asm("trap");
 }
@@ -39,7 +39,7 @@ void    QuenosBlockSelf (void)
 {
     asm("subi sp, sp, 4");
     asm("add r23,r23,r0");
-    asm("addi r23,2"); // #block self enum
+    asm("addi r23, r23, 2"); // #block self enum
     asm("stw r23, 4(sp)");
     asm("trap");
 }
@@ -50,13 +50,14 @@ void    QuenosBlockSelf (void)
  * call to assembly instead of arbitrarily using our choice of r22
  */
 
-void    QuenosUnblock (int other_pid)
+void    QuenosUnblock (int other_pid) //expect other_pid to be in r4 based on application binary interface documentation
 {
 
     asm("subi sp, sp, 8");
 
+    asm("mov r22, r4");
+    /**
     // Convert other_pid into a string and concat it in
-
     int length = snprintf(NULL, 0, "%d", other_pid);
     char* str = malloc (length +1); //1 extra character for null terminator
     //TODO: Check errors in malloc
@@ -69,15 +70,18 @@ void    QuenosUnblock (int other_pid)
     strcpy(completed_command, assembly_command);
     strcat(completed_command, str);
 
-    _asm(completed_command); //String literal and other problems, perhaps we must do as originally suggested with the full assembly, and compiler register convention tricks
+    asm(completed_command); //String literal and other problems, perhaps we must do as originally suggested with the full assembly, and compiler register convention tricks
+     */
 
     asm("add r23,r23,r0");
-    asm("addi r23,3"); //unblock enum
+    asm("addi r23, r23, 3"); //unblock enum
     asm("stw r23, 4(sp)");
     asm("stw r22, 8(sp)");
     asm("trap");
 
+    /*
     free(str);
     free(completed_command);
+     */
 }
 

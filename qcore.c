@@ -32,13 +32,15 @@ List of all registers:
 
 R0 zero
 R1
-R2
-R3
-R4
-R5
-R6
-R7
-R8
+R2 assembler temporary
+R3 return value (least-significant 32 bits)
+R4 return value (most significant 32 bits)
+R5 register argument 1st 32 bits
+R6 ""       ""       2nd
+R7 3rd 32 bits
+R8 4th 32 bits
+
+Caller saved general purpose registers
 R9
 R10
 R11
@@ -46,14 +48,19 @@ R12
 R13
 R14
 R15
+
+Callee saved general purpose registers
 R16
 R17
 R18
 R19
 R20
 R21
+
+Different on a linux system
 R22
 R23
+
 24et  - Exception Temporary (NOT AVAILABLE IN USER MODE)
 25bt	- Breakpoint Temporary (ONLY IN JTAG DEBUG MODULE)
 26gp	- Global Pointer

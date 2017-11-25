@@ -121,6 +121,13 @@ static  int     QuenosCoreUnblock (int other_pid)
    To make sure that we retain control over the stack pointer, the
    variables are made static outside the functions. */
 
+/**
+	Expect kernel_stack_pointer_address to magically get into register 4, which we will then write into the stackpoiter
+*/
+void writeRegisterValueToSP (void* registerValue){
+    asm("mov sp, r4");
+}
+
 static  int     need_dispatch;
 static  Request request;
 
@@ -180,13 +187,6 @@ void QuenosSaveContext (void) {
 	writeRegisterValueToSP(kernel_stack_pointer);
 	//write in kernel stack pointer address into register sp? could we hard code this into an assembly language file somewhere 274, 371 style?
 	
-}
-
-/**
-	Expect kernel_stack_pointer_address to magically get into register 4, which we will then write into the stackpoiter
-*/
-void writeRegisterValueToSP (int registerValue){
-	asm("mov sp, r4");
 }
 
 void QuenosRestoreContext(void) {

@@ -79,6 +79,7 @@ R23
 void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
                          int stack_size)
 {
+		//stackframe pointer deleted but not replaced? 
         int             new_pid = num_of_processes++;	/* assign new pid */
         Process             *new_process; // Formerly pdb
 
@@ -165,24 +166,42 @@ void QuenosSaveContext (void) {
     asm("stw r30, 120(sp)"); // r30 = ba
     asm("stw r31, 124(sp)"); // r31 = ra
     asm("addi fp, sp, 128");
-
-    /* Use embedded assembly language to copy SP in D, then into PDB. */
-    // TODO: change all assembly to make sense
-
-    running_process->user_stack_pointer = (void *) _asm ("tfr sp,d"); // Save the stack pointer to the static_stackframe_pointer
-
-    /* Second task: switch to kernel stack by modifying stack pointer. */
-    _asm ("tfr d,sp", kernel_stack_pointer);
+	
+	// TODO: change all assembly to make sense
+	/* Use embedded assembly language to copy SP in D, then into PDB. */
+    //running_process->user_stack_pointer = (void *) asm("mov sp,d"); // Save the stack pointer to the static_stackframe_pointer
     register int sp asm("sp");
-    running_process->user_stack_pointer = sp;
+    running_process->user_stack_pointer = sp; // Pointer from integer no casting warning
+	
+    /* Second task: switch to kernel stack by modifying stack pointer. */
+    //asm("mov d,sp", kernel_stack_pointer); //assumption dont need to shove sp into register d to read in, can just do below
+	
+	// Type mismatch warning 
+	writeRegisterValueToSP(kernel_stack_pointer);
+	//write in kernel stack pointer address into register sp? could we hard code this into an assembly language file somewhere 274, 371 style?
+	
+}
+
+/**
+	Expect kernel_stack_pointer_address to magically get into register 4, which we will then write into the stackpoiter
+*/
+void writeRegisterValueToSP (int registerValue){
+	asm("mov sp, r4");
 }
 
 void QuenosRestoreContext(void) {
 
     /* Sixth task: switch back to user stack pointer and return */
+	//Write the running->user_stack_pointer sp value we saved when saving context back to register sp
+	writeRegisterValueToSP(running_process->user_stack_pointer);
+
     // TODO: change all assembly to make sense
-    kernel_stack_pointer = (void *) _asm ("tfr sp,d");
-    _asm ("tfr d,sp", running_process->user_stack_pointer);
+    //kernel_stack_pointer = (void *) asm("mov sp,d"); //get d and put it into sp
+    //asm("mov d,sp", running_process->user_stack_pointer); 
+	
+	// Do we want to keep this or is it just redundant?
+	//register int sp asm("sp");
+    //running_process->user_stack_pointer = sp;
 
     asm("ldw r1, 4(sp)"); // restore all registers
     asm("ldw r2, 8(sp)");
@@ -276,8 +295,11 @@ void the_exception(void) {
 {
         running_process = DequeueHead (&ready_queue);
         running_process->state = Running;
+		
 		// TODO: change all assembly to make sense
-        _asm ("tfr d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
+		writeRegisterValueToSP(running_process->user_stack_pointer);
+
+        //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 
         //todo: how to generate a return from interrupt instruction from here for nios 2
         /* compiler generates a return-from-interrupt instruction here. */

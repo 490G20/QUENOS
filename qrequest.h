@@ -17,4 +17,8 @@ extern	void    QuenosRelinquish (void);
 extern	void    QuenosBlockSelf (void);
 extern	void    QuenosUnblock (int other_pid);
 
+extern void KernelRelinquish(void);
+extern void KernelBlock(void);
+extern void KernelUnblock(void);
+
 #endif //_QREQUEST_H_

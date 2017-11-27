@@ -23,9 +23,9 @@ DESCRIPTION:	Definitions for functions to request specific kernel services.
 #include "qrequest.h"
 // May need to adjust compile command flags
 
-extern void KernelRelinquish(void);
-extern void KernelBlock(void);
-extern void KernelUnblock(void);
+//extern void KernelRelinquish(void);
+//extern void KernelBlock(void);
+//extern void KernelUnblock(void);
 
 void    QuenosRelinquish (void) {
     KernelRelinquish();

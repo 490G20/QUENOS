@@ -1,7 +1,13 @@
 .section .text
 .global KernelRelinquish
-.global KernelBlockSelf
+#.type KernelRelinquish, @function
+.global KernelBlock
+#.type KernelBlockSelf, @function
+
 .global KernelUnblock
+#.type KernelUnblock, @function
+
+#.S extension required?
 
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
 # We enter the kernel using trap, and expect the ?exception handler? to automatically save everything onto the stack for us
@@ -17,10 +23,10 @@ KernelRelinquish:
     ldw r5, 4(sp)
 	ret
 
-KernelBlockSelf:
+KernelBlock:
     subi sp, sp, 4
     stw r5, 4(sp)
-    addi r5,2 #block self enum
+    movi r5,2 #block self enum
     trap
     ldw r5, 4(sp)
 	ret

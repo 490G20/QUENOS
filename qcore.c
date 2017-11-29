@@ -128,12 +128,15 @@ static  Request request;
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
+	register int other_pid asm("r22");
+ 	register int requestType asm("r23");
+
     //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
     //  UPDATE TO KERNEL STACK POINTER
-    void *pointer = running_process->user_stack_pointer;
-    pointer = kernel_stack_pointer;
-
+    int *dummy_address = (int *)running_process->user_stack_pointer + 1;
+    dummy_address = kernel_stack_pointer;
     asm("ldw sp, 4(sp)");
+
 	int ipending;
 
     /* Third task: retrieve arguments for kernel call. */
@@ -168,7 +171,8 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 
     //TODO: we must update running process stack pointer here, with the new thing running
     /* Sixth task: switch back to user stack pointer and return */
-    (running_process->user_stack_pointer+4) = running_process->user_stack_pointer;
+	dummy_address = (int *)kernel_stack_pointer + 1;
+	dummy_address = running_process->user_stack_pointer;
     asm("ldw sp, 4(sp)");
 }
 
@@ -185,8 +189,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         running_process->state = Running;
 		
 		// TODO: change all assembly to make sense
-		writeRegisterValueToSP(running_process->user_stack_pointer);
-
+		//writeRegisterValueToSP(running_process->user_stack_pointer);
         //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 
         //todo: how to generate a return from interrupt instruction from here for nios 2

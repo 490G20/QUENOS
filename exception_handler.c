@@ -19,12 +19,12 @@
    Finally, a reference to control register 'ctl4' in the asm() sequence
    has been replaced with the more meaningful alias 'ipending' for clarity.
 
-   Other than the changes described above, the file contents have been
+   Other than the changes described above, the file contents have also been
    reformatted to fit in 80 columns of text, and comments have been edited.
 */
 
 
-/* The assembly language code below handles CPU reset processing */
+/* The assembly language code below handles processor reset */
 void the_reset (void) __attribute__ ((section (".reset")));
 
 /*****************************************************************************
@@ -38,7 +38,7 @@ void the_reset (void)
   asm (".set noat");         /* the .set commands are included to prevent */
   asm (".set nobreak");      /* warning messages from the assembler */
   asm ("movia r2, _start");  /* jump to the C language _startup_ code */
-  asm ("jmp r2");            /* (*not* main, as in the original Altera file) */
+  asm ("jmp r2");            /* (_not_ main, as in the original Altera file) */
 }
 
 /* The assembly language code below handles exception processing. This
@@ -100,9 +100,6 @@ void the_exception (void)
 
   asm ("call	interrupt_handler"); /* call normal function */
 
-
-
-
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");
   asm ("ldw	r3,  12(sp)");
@@ -138,4 +135,11 @@ void the_exception (void)
   asm ("addi	sp,  sp, 128");
 
   asm ("eret"); /* return from exception */
+
+  /* Note that the C compiler will still generate the 'standard'
+     end-of-normal-function code with a normal return-from-subroutine
+     instruction. But with the above eret instruction embedded
+     in the final output from the compiler, that end-of-function code
+     will never be executed.
+   */ 
 }

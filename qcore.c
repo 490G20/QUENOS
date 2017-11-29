@@ -121,14 +121,6 @@ static  int     QuenosCoreUnblock (int other_pid)
    To make sure that we retain control over the stack pointer, the
    variables are made static outside the functions. */
 
-//TODO: remove and refactor as we don't want to asm directives
-/**
-	Expect kernel_stack_pointer_address to magically get into register 4, which we will then write into the stackpoiter
-*/
-void writeRegisterValueToSP (void* registerValue){
-    asm("mov sp, r4");
-}
-
 static  int     need_dispatch;
 static  Request request;
 
@@ -137,25 +129,18 @@ static  Request request;
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
     //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
-        //? switch to kernel stack?
-    // TODO: change all assembly to make sense
-    /* Use embedded assembly language to copy SP in D, then into PDB. */
-    //running_process->user_stack_pointer = (void *) asm("mov sp,d"); // Save the stack pointer to the static_stackframe_pointer
+    //  UPDATE TO KERNEL STACK POINTER
+    void *pointer = running_process->user_stack_pointer;
+    pointer = kernel_stack_pointer;
 
-    //register int sp asm("sp");
-    //running_process->user_stack_pointer = sp; // Pointer from integer no casting warning
-
-    //writeRegisterValueToSP(kernel_stack_pointer);
-    //TODO: update to use kernel stack pointer address into register sp? could we hard code
-
-	// ISR
-	register int other_pid asm("r22");
-	register int requestType asm("r23");
+    asm("ldw sp, 4(sp)");
 	int ipending;
 
     /* Third task: retrieve arguments for kernel call. */
     /* They are available on the user process stack. */
 	ipending = NIOS2_READ_IPENDING(); // Read the interrupt
+
+	// TODO: read in request type from kernel? stack at offset 20(sp)
 
 	if (ipending) {
 		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
@@ -183,17 +168,8 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 
     //TODO: we must update running process stack pointer here, with the new thing running
     /* Sixth task: switch back to user stack pointer and return */
-
-    // Write the running->user_stack_pointer sp value we saved when saving context back to register sp
-
-    //	writeRegisterValueToSP(running_process->user_stack_pointer);
-
-//    kernel_stack_pointer = (void *) asm("mov sp,d"); //get d and put it into sp
-//    asm("mov d,sp", running_process->user_stack_pointer);
-
-    // Do we want to keep this or is it just redundant?
-    //register int sp asm("sp");
-    //running_process->user_stack_pointer = sp;
+    (running_process->user_stack_pointer+4) = running_process->user_stack_pointer;
+    asm("ldw sp, 4(sp)");
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an

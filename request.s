@@ -17,27 +17,30 @@
 #TODO: Determine how to link and if qrequest.h
 KernelRelinquish:
     subi sp, sp, 4
-    stw r5, 4(sp)
+    stw r5, 0(sp)
     movi r5,1 #relinquish enum
     trap
-    ldw r5, 4(sp)
+    ldw r5, 0(sp)
+    addi sp,sp,4
 	ret
 
 KernelBlock:
     subi sp, sp, 4
-    stw r5, 4(sp)
+    stw r5, 0(sp)
     movi r5,2 #block self enum
     trap
-    ldw r5, 4(sp)
+    ldw r5, 0(sp)
+    addi sp,sp,4
 	ret
 
 KernelUnblock:
     #Expect otherpid in r4 according to altera nios 2 application binary interface
     subi sp, sp, 8
     stw r5, 4(sp)
-    stw r4, 8(sp)
+    stw r4, 0(sp)
     movi r5,3 #unblock enum
     trap
     ldw r5, 4(sp)
-    ldw r4, 8(sp)
+    ldw r4, 0(sp)
+    addi sp,sp,8
 	ret

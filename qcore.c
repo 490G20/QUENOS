@@ -32,13 +32,15 @@ List of all registers:
 
 R0 zero
 R1
-R2
-R3
-R4
-R5
-R6
-R7
-R8
+R2 assembler temporary
+R3 return value (least-significant 32 bits)
+R4 return value (most significant 32 bits)
+R5 register argument 1st 32 bits
+R6 ""       ""       2nd
+R7 3rd 32 bits
+R8 4th 32 bits
+
+Caller saved general purpose registers
 R9
 R10
 R11
@@ -46,14 +48,19 @@ R12
 R13
 R14
 R15
+
+Callee saved general purpose registers
 R16
 R17
 R18
 R19
 R20
 R21
+
+Different on a linux system
 R22
 R23
+
 24et  - Exception Temporary (NOT AVAILABLE IN USER MODE)
 25bt	- Breakpoint Temporary (ONLY IN JTAG DEBUG MODULE)
 26gp	- Global Pointer
@@ -72,6 +79,7 @@ R23
 void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
                          int stack_size)
 {
+		//stackframe pointer deleted but not replaced? 
         int             new_pid = num_of_processes++;	/* assign new pid */
         Process             *new_process; // Formerly pdb
 
@@ -116,116 +124,23 @@ static  int     QuenosCoreUnblock (int other_pid)
 static  int     need_dispatch;
 static  Request request;
 
-void QuenosSaveContext (void) {
-    asm(".set noat"); // magic, for the C compiler
-    asm(".set nobreak"); // magic, for the C compiler
-    asm("subi sp, sp, 128");
-    asm("stw et, 96(sp)");
-    asm("rdctl et, ctl4");
-    asm("beq et, r0, SKIP_EA_DEC"); // interrupt is not external
-    asm("subi ea, ea, 4"); /* must decrement ea by one instruction for external
-							* interrupts, so that the instruction will be run */
-
-    asm("SKIP_EA_DEC:");
-    asm("stw r1, 4(sp)"); // save all registers
-    asm("stw r2, 8(sp)");
-    asm("stw r3, 12(sp)");
-    asm("stw r4, 16(sp)");
-    asm("stw r5, 20(sp)");
-    asm("stw r6, 24(sp)");
-    asm("stw r7, 28(sp)");
-    asm("stw r8, 32(sp)");
-    asm("stw r9, 36(sp)");
-    asm("stw r10, 40(sp)");
-    asm("stw r11, 44(sp)");
-    asm("stw r12, 48(sp)");
-    asm("stw r13, 52(sp)");
-    asm("stw r14, 56(sp)");
-    asm("stw r15, 60(sp)");
-    asm("stw r16, 64(sp)");
-    asm("stw r17, 68(sp)");
-    asm("stw r18, 72(sp)");
-    asm("stw r19, 76(sp)");
-    asm("stw r20, 80(sp)");
-    asm("stw r21, 84(sp)");
-    asm("stw r22, 88(sp)");
-    asm("stw r23, 92(sp)");
-    asm("stw r25, 100(sp)"); // r25 = bt (skip r24 = et, because it was saved above)
-    asm("stw r26, 104(sp)"); // r26 = gp
-    asm("stw r27, 108(sp)"); // r27 = sp
-    asm("stw r28, 112(sp)"); // r28 = fp
-    asm("stw r29, 116(sp)"); // r29 = ea
-    asm("stw r30, 120(sp)"); // r30 = ba
-    asm("stw r31, 124(sp)"); // r31 = ra
-    asm("addi fp, sp, 128");
-
-    /* Use embedded assembly language to copy SP in D, then into PDB. */
-    // TODO: change all assembly to make sense
-
-    running_process->user_stack_pointer = (void *) _asm ("tfr sp,d"); // Save the stack pointer to the static_stackframe_pointer
-
-    /* Second task: switch to kernel stack by modifying stack pointer. */
-    _asm ("tfr d,sp", kernel_stack_pointer);
-    register int sp asm("sp");
-    running_process->user_stack_pointer = sp;
-}
-
-void QuenosRestoreContext(void) {
-
-    /* Sixth task: switch back to user stack pointer and return */
-    // TODO: change all assembly to make sense
-    kernel_stack_pointer = (void *) _asm ("tfr sp,d");
-    _asm ("tfr d,sp", running_process->user_stack_pointer);
-
-    asm("ldw r1, 4(sp)"); // restore all registers
-    asm("ldw r2, 8(sp)");
-    asm("ldw r3, 12(sp)");
-    asm("ldw r4, 16(sp)");
-    asm("ldw r5, 20(sp)");
-    asm("ldw r6, 24(sp)");
-    asm("ldw r7, 28(sp)");
-    asm("ldw r8, 32(sp)");
-    asm("ldw r9, 36(sp)");
-    asm("ldw r10, 40(sp)");
-    asm("ldw r11, 44(sp)");
-    asm("ldw r12, 48(sp)");
-    asm("ldw r13, 52(sp)");
-    asm("ldw r14, 56(sp)");
-    asm("ldw r15, 60(sp)");
-    asm("ldw r16, 64(sp)");
-    asm("ldw r17, 68(sp)");
-    asm("ldw r18, 72(sp)");
-    asm("ldw r19, 76(sp)");
-    asm("ldw r20, 80(sp)");
-    asm("ldw r21, 84(sp)");
-    asm("ldw r22, 88(sp)");
-    asm("ldw r23, 92(sp)");
-    asm("ldw r24, 96(sp)");
-    asm("ldw r25, 100(sp)"); // r25 = bt
-    asm("ldw r26, 104(sp)"); // r26 = gp
-    // skip r27 because it is sp, and we did not save this on the stack
-    asm("ldw r28, 112(sp)"); // r28 = fp
-    asm("ldw r29, 116(sp)"); // r29 = ea
-    asm("ldw r30, 120(sp)"); // r30 = ba
-    asm("ldw r31, 124(sp)"); // r31 = ra
-    asm("addi sp, sp, 128");
-    asm("eret");
-}
-
 // This is called directly called by the DE2 hardware when a hardware interrupt occurs,
 // It is also called indirectly by the_exception(), the software interrupt
-void    interrupt_handler (void)
+void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
-    /* On entry, all user registers must be saved to the process stack. */
-	QuenosSaveContext();
+    //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
+    //  UPDATE TO KERNEL STACK POINTER
+    void *pointer = running_process->user_stack_pointer;
+    pointer = kernel_stack_pointer;
 
-	register int other_pid asm("r22");
-	register int requestType asm("r23");
+    asm("ldw sp, 4(sp)");
 	int ipending;
 
     /* Third task: retrieve arguments for kernel call. */
     /* They are available on the user process stack. */
-	NIOS2_READ_IPENDING(ipending); // Read the interrupt
+	ipending = NIOS2_READ_IPENDING(); // Read the interrupt
+
+	// TODO: read in request type from kernel? stack at offset 20(sp)
 
 	if (ipending) {
 		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
@@ -249,13 +164,12 @@ void    interrupt_handler (void)
 			running_process->state = Running;
 		}
 	}
-    /* compiler generates a return-from-interrupt instruction here. */
-	QuenosRestoreContext();
-}
+    // ISR ____________
 
-void the_exception(void) __attribute__ ((section (".exceptions")));
-void the_exception(void) {
-	interrupt_handler();
+    //TODO: we must update running process stack pointer here, with the new thing running
+    /* Sixth task: switch back to user stack pointer and return */
+    (running_process->user_stack_pointer+4) = running_process->user_stack_pointer;
+    asm("ldw sp, 4(sp)");
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an
@@ -269,8 +183,11 @@ void the_exception(void) {
 {
         running_process = DequeueHead (&ready_queue);
         running_process->state = Running;
+		
 		// TODO: change all assembly to make sense
-        _asm ("tfr d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
+		writeRegisterValueToSP(running_process->user_stack_pointer);
+
+        //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 
         //todo: how to generate a return from interrupt instruction from here for nios 2
         /* compiler generates a return-from-interrupt instruction here. */

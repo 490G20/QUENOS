@@ -31,7 +31,7 @@ static	void    Process1 (void)
 {
         for (;;)
         {
-                QuenosBlockSelf (); //TODO: find this method's definition, is it in qrequest or qcore? issue possibly with IDE not recognizing connection
+                QuenosBlockSelf ();
         }
 }
 

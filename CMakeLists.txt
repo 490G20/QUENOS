@@ -15,6 +15,8 @@ set(SOURCE_FILES
         queue.c
         queue.h
         quser.c
-        quser.h)
+        quser.h
+        request.s
+        )
 
 add_executable(4thYearProjectGroup20cmpe498 ${SOURCE_FILES})

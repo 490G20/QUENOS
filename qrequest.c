@@ -20,64 +20,24 @@ DESCRIPTION:	Definitions for functions to request specific kernel services.
 		Queen's University
 ******************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-//#include <memory.h>
-#include <string.h>
 #include "qrequest.h"
+// May need to adjust compile command flags
 
-void    QuenosRelinquish (void)
-{
-    asm("subi sp, sp, 4");
-    asm("add r23,r23,r0");
-    asm("addi r23,1"); //Relinquish enum
-    asm("stw r23, 4(sp)");
-    asm("trap");
+//extern void KernelRelinquish(void);
+//extern void KernelBlock(void);
+//extern void KernelUnblock(void);
+
+void    QuenosRelinquish (void) {
+    KernelRelinquish();
 }
-
-void    QuenosBlockSelf (void)
-{
-    asm("subi sp, sp, 4");
-    asm("add r23,r23,r0");
-    asm("addi r23,2"); // #block self enum
-    asm("stw r23, 4(sp)");
-    asm("trap");
+void    QuenosBlockSelf (void) {
+    KernelBlock();
 }
 
 /**
- *
- * We will see if we will need to use the specific register that is the 1st argument in a C
- * call to assembly instead of arbitrarily using our choice of r22
+ * Application binary interface documentation says other_pid will be passed into r4
  */
-
-void    QuenosUnblock (int other_pid)
-{
-
-    asm("subi sp, sp, 8");
-
-    // Convert other_pid into a string and concat it in
-
-    int length = snprintf(NULL, 0, "%d", other_pid);
-    char* str = malloc (length +1); //1 extra character for null terminator
-    //TODO: Check errors in malloc
-    snprintf(str, length+1, "%d", other_pid);
-
-    char assembly_command[] = "movi r22,";
-
-    char *completed_command = malloc(strlen(assembly_command) + strlen(str) +1);
-    //TODO: Check for errors in malloc
-    strcpy(completed_command, assembly_command);
-    strcat(completed_command, str);
-
-    _asm(completed_command); //String literal and other problems, perhaps we must do as originally suggested with the full assembly, and compiler register convention tricks
-
-    asm("add r23,r23,r0");
-    asm("addi r23,3"); //unblock enum
-    asm("stw r23, 4(sp)");
-    asm("stw r22, 8(sp)");
-    asm("trap");
-
-    free(str);
-    free(completed_command);
+void    QuenosUnblock (int other_pid) {
+    KernelUnblock();
 }
 

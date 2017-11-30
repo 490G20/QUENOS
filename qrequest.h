@@ -11,7 +11,7 @@ DESCRIPTION:	Declarations for functions to request specific kernel services.
 		Queen's University
 ******************************************************************************/
 
-typedef enum    {Relinquish, BlockSelf, Unblock} Request;
+typedef enum    {Relinquish, BlockSelf, Unblock} Request; //TODO: investigate if this is smart enough to auto equal 1,2,3
 
 extern	void    QuenosRelinquish (void);
 extern	void    QuenosBlockSelf (void);

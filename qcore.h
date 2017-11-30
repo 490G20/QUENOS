@@ -31,5 +31,7 @@ extern  void    QuenosNewProcess (void (*entry_point) (void),
 extern  void    QuenosSWIHandler (void);
 
 extern  void    QuenosDispatch (void);
+extern void OverWriteSP(void);
+
 
 #endif /* _QCORE_H_ */

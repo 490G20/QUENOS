@@ -119,7 +119,7 @@ static int QuenosOverwriteSP(int newSP){
     OverwriteSP();
 }
 
-static int QuenosUndoChangesToSP(int prevRunningSP, int newSP){
+static int QuenosUndoChangesToSP(unsigned int prevRunningSP, unsigned int newSP){
     UndoChangesToSP();
 }
 
@@ -185,7 +185,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
     /* Sixth task: switch back to user stack pointer and return */
     unsigned int newSP = (unsigned int) running_process->user_stack_pointer;
     //TODO: we must update running process stack pointer here, with the new thing running
-    QuenosUndoChangesToSP(casted_prev_sp, newSP);
+    QuenosUndoChangesToSP( (unsigned int) &casted_prev_sp, newSP);
 
     // Despite how we mess with registers excluding SP, we expect the rest of the interrupt service handler to restore them
 }
@@ -203,7 +203,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         running_process->state = Running;
 		
 		// TODO: change all assembly to make sense
-		writeRegisterValueToSP(running_process->user_stack_pointer);
+		//writeRegisterValueToSP(running_process->user_stack_pointer);
 
         //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 

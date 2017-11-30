@@ -28,10 +28,7 @@ typedef struct  _process // Formerly _pdb
 extern  void    QuenosNewProcess (void (*entry_point) (void),
 				 char *stack_bottom, int stack_size);
 
-extern  void    QuenosSWIHandler (void);
-
-extern  void    QuenosDispatch (void);
-extern void OverWriteSP(void);
-
+//TODO: remove after sweep
+//extern  void    QuenosSWIHandler (void);
 
 #endif /* _QCORE_H_ */

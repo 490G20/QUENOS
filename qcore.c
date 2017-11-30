@@ -22,14 +22,15 @@ static  Queue   ready_queue;
 
 static  char    kernel_stack[512];
 static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
+//todo: Should we just define kernel in exception_handler.c?
 
 static  int     num_of_processes = 0;	/* counter used to assign unique pids */
 
 static  Process     process_array[MAX_NUM_OF_PROCESSES]; // Formerly pdb_array
 
-extern void OverwriteSP(void);
-extern void UndoChangesToSP(void);
-
+//TODO: investigate if these belong in .h
+extern unsigned int process_stack_pointer;
+extern unsigned int ksp;
 /*
 List of all registers:
 
@@ -115,14 +116,6 @@ static  int     QuenosCoreUnblock (int other_pid)
         return 0;       /* no dispatch of new process */
 }
 
-static int QuenosOverwriteSP(int newSP){
-    OverwriteSP();
-}
-
-static int QuenosUndoChangesToSP(unsigned int prevRunningSP, unsigned int newSP){
-    UndoChangesToSP();
-}
-
 /*----------------------------------------------------------------*/
 /* software interrupt routines */
 
@@ -133,20 +126,15 @@ static int QuenosUndoChangesToSP(unsigned int prevRunningSP, unsigned int newSP)
    variables are made static outside the functions. */
 
 static  int     need_dispatch;
-static  Request request;
+//static  Request request; //Replaced with requesttype, but does it need to be static?
 
 // This is called directly called by the DE2 hardware when a hardware interrupt occurs,
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
     // First task: Update process control block for running process with stackpointer
-    register int sp asm("sp");
-    running_process->user_stack_pointer = (void*) sp;
+    running_process->user_stack_pointer = (void*) process_stack_pointer;
     int* casted_prev_sp = (int*) running_process->user_stack_pointer; //todo: int* vs char*
-
-    // Second task switch to kernel stack by modifying register sp
-        //stack pointer (how to get from C into register sp)
-    QuenosOverwriteSP((unsigned int)&kernel_stack[511]);
 
     int ipending = NIOS2_READ_IPENDING(); // Read the interrupt
 
@@ -161,15 +149,15 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
 	}
 	else {
-		if (requestType == Relinquish) {
+		if (requestType == 1) {
 			running_process->state = Ready;
 			AddToTail(&ready_queue, running_process);
 			need_dispatch = 1;       /* need dispatch of new process */
 		}
-		else if (requestType == BlockSelf) {
+		else if (requestType == 2) {
 			need_dispatch = QuenosCoreBlockSelf();
 		}
-		else if (requestType == Unblock){
+		else if (requestType == 3){
             int other_pid = *(casted_prev_sp+4);
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
@@ -182,11 +170,14 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         running_process->state = Running;
     }
 
-    /* Sixth task: switch back to user stack pointer and return */
-    unsigned int newSP = (unsigned int) running_process->user_stack_pointer;
-    //TODO: we must update running process stack pointer here, with the new thing running
-    QuenosUndoChangesToSP( (unsigned int) &casted_prev_sp, newSP);
+    // //////////////////////////////////////// ISR ///////////////////////////
 
+    //OVERWRITE THE RIGHT VARIABLE YOU SET BEFORE WTH TEH NEW STACK POINTER YOU WANT REGISTER SP SET AT
+
+
+    /* Sixth task: switch back to user stack pointer and return */
+    ksp = &kernel_stack[511];
+    process_stack_pointer = running_process->user_stack_pointer;
     // Despite how we mess with registers excluding SP, we expect the rest of the interrupt service handler to restore them
 }
 

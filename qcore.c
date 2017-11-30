@@ -27,6 +27,9 @@ static  int     num_of_processes = 0;	/* counter used to assign unique pids */
 
 static  Process     process_array[MAX_NUM_OF_PROCESSES]; // Formerly pdb_array
 
+extern void OverwriteSP(void);
+extern void UndoChangesToSP(void);
+
 /*
 List of all registers:
 
@@ -112,6 +115,14 @@ static  int     QuenosCoreUnblock (int other_pid)
         return 0;       /* no dispatch of new process */
 }
 
+static int QuenosOverwriteSP(int newSP){
+    OverwriteSP();
+}
+
+static int QuenosUndoChangesToSP(int prevRunningSP, int newSP){
+    UndoChangesToSP();
+}
+
 /*----------------------------------------------------------------*/
 /* software interrupt routines */
 
@@ -128,20 +139,24 @@ static  Request request;
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
-    //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
-    //  UPDATE TO KERNEL STACK POINTER
-    void *pointer = running_process->user_stack_pointer;
-    pointer = kernel_stack_pointer;
+    // First task: Update process control block for running process with stackpointer
+    register int sp asm("sp");
+    running_process->user_stack_pointer = (void*) sp;
+    int* casted_prev_sp = (int*) running_process->user_stack_pointer; //todo: int* vs char*
 
-    asm("ldw sp, 4(sp)");
-	int ipending;
+    // Second task switch to kernel stack by modifying register sp
+        //stack pointer (how to get from C into register sp)
+    QuenosOverwriteSP((unsigned int)&kernel_stack[511]);
+
+    int ipending = NIOS2_READ_IPENDING(); // Read the interrupt
 
     /* Third task: retrieve arguments for kernel call. */
     /* They are available on the user process stack. */
-	ipending = NIOS2_READ_IPENDING(); // Read the interrupt
+    int requestType = *(casted_prev_sp+5);
 
 	// TODO: read in request type from kernel? stack at offset 20(sp)
 
+    // 4th task invoke appropriate routine for request
 	if (ipending) {
 		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
 	}
@@ -155,21 +170,24 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 			need_dispatch = QuenosCoreBlockSelf();
 		}
 		else if (requestType == Unblock){
+            int other_pid = *(casted_prev_sp+4);
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
-		/* Fifth task: decide if dispatching of new process is needed. */
-		if (need_dispatch)
-		{
-			running_process = DequeueHead(&ready_queue);
-			running_process->state = Running;
-		}
 	}
-    // ISR ____________
 
-    //TODO: we must update running process stack pointer here, with the new thing running
+    /* Fifth task: decide if dispatching of new process is needed. */
+    if (need_dispatch)
+    {
+        running_process = DequeueHead(&ready_queue);
+        running_process->state = Running;
+    }
+
     /* Sixth task: switch back to user stack pointer and return */
-    (running_process->user_stack_pointer+4) = running_process->user_stack_pointer;
-    asm("ldw sp, 4(sp)");
+    unsigned int newSP = (unsigned int) running_process->user_stack_pointer;
+    //TODO: we must update running process stack pointer here, with the new thing running
+    QuenosUndoChangesToSP(casted_prev_sp, newSP);
+
+    // Despite how we mess with registers excluding SP, we expect the rest of the interrupt service handler to restore them
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an

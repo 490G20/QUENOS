@@ -23,6 +23,7 @@ static  Queue   ready_queue;
 static  char    kernel_stack[512];
 static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
 //todo: Should we just define kernel in exception_handler.c?
+unsigned int kernel_stack_address = &kernel_stack[511];
 
 static  int     num_of_processes = 0;	/* counter used to assign unique pids */
 

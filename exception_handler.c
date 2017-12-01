@@ -27,6 +27,7 @@
 
 unsigned int temporary_sp_holder; //no static, is default global
 unsigned int ksp;
+extern unsigned int kernel_stack_address;
 
 /* The assembly language code below handles processor reset */
 void the_reset (void) __attribute__ ((section (".reset")));

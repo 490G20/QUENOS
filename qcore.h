@@ -30,5 +30,6 @@ extern  void    QuenosNewProcess (void (*entry_point) (void),
 
 //TODO: remove after sweep
 //extern  void    QuenosSWIHandler (void);
-
+extern unsigned int process_stack_pointer;
+extern unsigned int ksp;
 #endif /* _QCORE_H_ */

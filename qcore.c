@@ -22,11 +22,16 @@ static  Queue   ready_queue;
 
 static  char    kernel_stack[512];
 static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
+//todo: Should we just define kernel in exception_handler.c?
+unsigned int kernel_stack_address = &kernel_stack[511];
 
 static  int     num_of_processes = 0;	/* counter used to assign unique pids */
 
 static  Process     process_array[MAX_NUM_OF_PROCESSES]; // Formerly pdb_array
 
+//TODO: investigate if these belong in .h
+extern unsigned int process_stack_pointer;
+extern unsigned int ksp;
 /*
 List of all registers:
 
@@ -122,54 +127,59 @@ static  int     QuenosCoreUnblock (int other_pid)
    variables are made static outside the functions. */
 
 static  int     need_dispatch;
-static  Request request;
+//static  Request request; //Replaced with requesttype, but does it need to be static?
 
 // This is called directly called by the DE2 hardware when a hardware interrupt occurs,
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
-    //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
-    //  UPDATE TO KERNEL STACK POINTER
-    void *pointer = running_process->user_stack_pointer;
-    pointer = kernel_stack_pointer;
+    // First task: Update process control block for running process with stackpointer
+    running_process->user_stack_pointer = (void*) process_stack_pointer;
+    int* casted_prev_sp = (int*) running_process->user_stack_pointer; //todo: int* vs char*
 
-    asm("ldw sp, 4(sp)");
-	int ipending;
+    int ipending = NIOS2_READ_IPENDING(); // Read the interrupt
 
     /* Third task: retrieve arguments for kernel call. */
     /* They are available on the user process stack. */
-	ipending = NIOS2_READ_IPENDING(); // Read the interrupt
+    int requestType = *(casted_prev_sp+5);
 
 	// TODO: read in request type from kernel? stack at offset 20(sp)
 
+    // 4th task invoke appropriate routine for request
 	if (ipending) {
 		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
 	}
 	else {
-		if (requestType == Relinquish) {
+		if (requestType == 1) {
 			running_process->state = Ready;
 			AddToTail(&ready_queue, running_process);
 			need_dispatch = 1;       /* need dispatch of new process */
 		}
-		else if (requestType == BlockSelf) {
+		else if (requestType == 2) {
 			need_dispatch = QuenosCoreBlockSelf();
 		}
-		else if (requestType == Unblock){
+		else if (requestType == 3){
+            int other_pid = *(casted_prev_sp+4);
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
-		/* Fifth task: decide if dispatching of new process is needed. */
-		if (need_dispatch)
-		{
-			running_process = DequeueHead(&ready_queue);
-			running_process->state = Running;
-		}
 	}
-    // ISR ____________
 
-    //TODO: we must update running process stack pointer here, with the new thing running
+    /* Fifth task: decide if dispatching of new process is needed. */
+    if (need_dispatch)
+    {
+        running_process = DequeueHead(&ready_queue);
+        running_process->state = Running;
+    }
+
+    // //////////////////////////////////////// ISR ///////////////////////////
+
+    //OVERWRITE THE RIGHT VARIABLE YOU SET BEFORE WTH TEH NEW STACK POINTER YOU WANT REGISTER SP SET AT
+
+
     /* Sixth task: switch back to user stack pointer and return */
-    (running_process->user_stack_pointer+4) = running_process->user_stack_pointer;
-    asm("ldw sp, 4(sp)");
+    ksp = &kernel_stack[511];
+    process_stack_pointer = running_process->user_stack_pointer;
+    // Despite how we mess with registers excluding SP, we expect the rest of the interrupt service handler to restore them
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an
@@ -185,7 +195,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         running_process->state = Running;
 		
 		// TODO: change all assembly to make sense
-		writeRegisterValueToSP(running_process->user_stack_pointer);
+		//writeRegisterValueToSP(running_process->user_stack_pointer);
 
         //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 

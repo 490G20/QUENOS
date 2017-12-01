@@ -23,6 +23,11 @@
    reformatted to fit in 80 columns of text, and comments have been edited.
 */
 
+//special global variables
+
+unsigned int temporary_sp_holder; //no static, is default global
+unsigned int ksp;
+extern unsigned int kernel_stack_address;
 
 /* The assembly language code below handles processor reset */
 void the_reset (void) __attribute__ ((section (".reset")));
@@ -98,7 +103,13 @@ void the_exception (void)
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
+  asm("movia process_stack_pointer, sp"); // To be accessed interrupt_handler routine
+  // Second task switch to kernel stack by modifying register sp
+  asm("movia sp, kernel_stack_pointer"); //now in kernel memory space
   asm ("call	interrupt_handler"); /* call normal function */
+
+  // Expect process_stack_pointer to have been updated with correct value in interrupt handler
+  asm("movia sp, process_stack_pointer");
 
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");

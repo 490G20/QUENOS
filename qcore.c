@@ -20,6 +20,8 @@ static  Process     *running_process;
 
 static  Queue   ready_queue;
 
+volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+
 static  char    kernel_stack[512];
 static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
 
@@ -78,7 +80,8 @@ R23
 
 void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
                          int stack_size)
-{
+{		
+		printString("\nNewProcess\n>\0");
 		//stackframe pointer deleted but not replaced? 
         int             new_pid = num_of_processes++;	/* assign new pid */
         Process             *new_process; // Formerly pdb
@@ -150,14 +153,17 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 	}
 	else {
 		if (requestType == Relinquish) {
+			printString("\nRelinquish\n>\0");
 			running_process->state = Ready;
 			AddToTail(&ready_queue, running_process);
 			need_dispatch = 1;       /* need dispatch of new process */
 		}
 		else if (requestType == BlockSelf) {
+			printString("\nBlockSelf\n>\0");
 			need_dispatch = QuenosCoreBlockSelf();
 		}
 		else if (requestType == Unblock){
+			printString("\nUnblock\n>\0");
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
 		/* Fifth task: decide if dispatching of new process is needed. */
@@ -184,7 +190,8 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 //@interrupt	void    QuenosDispatch (void)
 	void    QuenosDispatch (void)
 
-{
+{		
+		printString("\nDispatch\n>\0");
         running_process = DequeueHead (&ready_queue);
         running_process->state = Running;
 		
@@ -195,3 +202,18 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         //todo: how to generate a return from interrupt instruction from here for nios 2
         /* compiler generates a return-from-interrupt instruction here. */
 }
+	void	put_jtag( volatile int* JTAG_UART_ptr, char c )
+{
+	int control;
+	control = *(JTAG_UART_ptr + 1);	// read the JTAG_UART Control register
+	
+	if(control & 0xFFFF0000) {// if space, then echo character, else ignore
+		*(JTAG_UART_ptr) = c;
+	}
+}
+
+	void printString(char text_string[] )
+{	
+	for(i = 0; text_string[i] != 0; ++i)// print a text string
+		put_jtag (JTAG_UART_ptr, text_string[i]);
+}	

@@ -34,7 +34,8 @@ int     main ()
 {
         /* initialize interrupt vectors and any other things... */
         QuenosInit ();
-
+		
+		printString("\nStarting QUENOS\n>\0");
         /* create null process and add to ready queue */
         QuenosNewProcess (NullProcess, NullProcessStack,
                          NULL_PROCESS_STACK_SIZE);
@@ -44,7 +45,7 @@ int     main ()
 
         /* enable all interrupts */
         //cli();
-
+		
         /* start up the first process (we never return here) */
         QuenosDispatch ();
 }

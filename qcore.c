@@ -213,7 +213,9 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 }
 
 	void printString(char text_string[] )
-{	
-	for(i = 0; text_string[i] != 0; ++i)// print a text string
-		put_jtag (JTAG_UART_ptr, text_string[i]);
-}	
+{
+    int i =0;
+	for(i = 0; text_string[i] != 0; ++i){ // print a text string
+        put_jtag (JTAG_UART_ptr, text_string[i]);
+    }
+}

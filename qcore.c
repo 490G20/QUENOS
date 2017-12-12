@@ -29,6 +29,24 @@ static  int     num_of_processes = 0;	/* counter used to assign unique pids */
 
 static  Process     process_array[MAX_NUM_OF_PROCESSES]; // Formerly pdb_array
 
+void	put_jtag( volatile int* JTAG_UART_ptr, char c )
+{
+	int control;
+	control = *(JTAG_UART_ptr + 1);	// read the JTAG_UART Control register
+
+	if(control & 0xFFFF0000) {// if space, then echo character, else ignore
+		*(JTAG_UART_ptr) = c;
+	}
+}
+
+void printString(char text_string[] )
+{
+    int i =0;
+    for(i = 0; text_string[i] != 0; ++i){ // print a text string
+        put_jtag (JTAG_UART_ptr, text_string[i]);
+    }
+}
+
 /*
 List of all registers:
 
@@ -188,9 +206,8 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
    to generate a return-from-interrupt instruction. */
 
 //@interrupt	void    QuenosDispatch (void)
-	void    QuenosDispatch (void)
-
-{		
+void    QuenosDispatch (void)
+{
 		printString("\nDispatch\n>\0");
         running_process = DequeueHead (&ready_queue);
         running_process->state = Running;
@@ -202,20 +219,4 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         //todo: how to generate a return from interrupt instruction from here for nios 2
         /* compiler generates a return-from-interrupt instruction here. */
 }
-	void	put_jtag( volatile int* JTAG_UART_ptr, char c )
-{
-	int control;
-	control = *(JTAG_UART_ptr + 1);	// read the JTAG_UART Control register
-	
-	if(control & 0xFFFF0000) {// if space, then echo character, else ignore
-		*(JTAG_UART_ptr) = c;
-	}
-}
 
-	void printString(char text_string[] )
-{
-    int i =0;
-	for(i = 0; text_string[i] != 0; ++i){ // print a text string
-        put_jtag (JTAG_UART_ptr, text_string[i]);
-    }
-}

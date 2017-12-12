@@ -23,6 +23,8 @@
    reformatted to fit in 80 columns of text, and comments have been edited.
 */
 
+unsigned int process_stack_pointer; //no static, is default global
+unsigned int ksp;
 
 /* The assembly language code below handles processor reset */
 void the_reset (void) __attribute__ ((section (".reset")));
@@ -98,7 +100,13 @@ void the_exception (void)
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
+  //move in address of ksp var into register
+  //store sp register value into kernel stack address, which needs to be in a register
+
   asm ("call	interrupt_handler"); /* call normal function */
+
+  //move process stack pointer address into a register
+  //store register sp contents into that memory address
 
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");

@@ -40,4 +40,3 @@ void    QuenosBlockSelf (void) {
 void    QuenosUnblock (int other_pid) {
     KernelUnblock();
 }
-

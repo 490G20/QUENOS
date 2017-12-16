@@ -101,12 +101,15 @@ void the_exception (void)
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
   //move in address of ksp var into register
+  asm("movia r22, ksp"); //compiles if i dont do &ksp, but ksp instead
   //store sp register value into kernel stack address, which needs to be in a register
+  asm("stw sp, 0(r22)");
 
   asm ("call	interrupt_handler"); /* call normal function */
 
   //move process stack pointer address into a register
   //store register sp contents into that memory address
+  //asm("movia r23, &")
 
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");

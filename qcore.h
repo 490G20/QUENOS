@@ -31,5 +31,7 @@ extern  void    QuenosNewProcess (void (*entry_point) (void),
 extern  void    QuenosSWIHandler (void);
 
 extern  void    QuenosDispatch (void);
+extern unsigned int process_stack_pointer;
+extern unsigned int ksp;
 
 #endif /* _QCORE_H_ */

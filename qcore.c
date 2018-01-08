@@ -20,12 +20,35 @@ static  Process     *running_process;
 
 static  Queue   ready_queue;
 
+volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+
 static  char    kernel_stack[512];
 static  void    *kernel_stack_pointer = (void *) &kernel_stack[511];
+// Ask why we can't just define this in the exception handler and
 
 static  int     num_of_processes = 0;	/* counter used to assign unique pids */
 
 static  Process     process_array[MAX_NUM_OF_PROCESSES]; // Formerly pdb_array
+extern unsigned int process_stack_pointer;
+extern unsigned int ksp;
+
+void	put_jtag( volatile int* JTAG_UART_ptr, char c )
+{
+	int control;
+	control = *(JTAG_UART_ptr + 1);	// read the JTAG_UART Control register
+
+	if(control & 0xFFFF0000) {// if space, then echo character, else ignore
+		*(JTAG_UART_ptr) = c;
+	}
+}
+
+void printString(char text_string[] )
+{
+    int i =0;
+    for(i = 0; text_string[i] != 0; ++i){ // print a text string
+        put_jtag (JTAG_UART_ptr, text_string[i]);
+    }
+}
 
 /*
 List of all registers:
@@ -78,7 +101,8 @@ R23
 
 void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
                          int stack_size)
-{
+{		
+		printString("\nNewProcess\n>\0");
 		//stackframe pointer deleted but not replaced? 
         int             new_pid = num_of_processes++;	/* assign new pid */
         Process             *new_process; // Formerly pdb
@@ -122,18 +146,24 @@ static  int     QuenosCoreUnblock (int other_pid)
    variables are made static outside the functions. */
 
 static  int     need_dispatch;
-static  Request request;
+//static  Request request; //TODO: remove
 
 // This is called directly called by the DE2 hardware when a hardware interrupt occurs,
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
+
+	// First task: Update process control block for running process with stackpointer
+	running_process->user_stack_pointer = (void*) process_stack_pointer;
+	unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
+
     //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
     //  UPDATE TO KERNEL STACK POINTER
-    void *pointer = running_process->user_stack_pointer;
-    pointer = kernel_stack_pointer;
+    int *dummy_address = (int *)running_process->user_stack_pointer + 1;
+    dummy_address = kernel_stack_pointer;
 
-    asm("ldw sp, 4(sp)");
+	int requestType = *(casted_prev_sp+5);
+
 	int ipending;
 
     /* Third task: retrieve arguments for kernel call. */
@@ -146,30 +176,37 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
 	}
 	else {
-		if (requestType == Relinquish) {
+		if (requestType == 1) {
+			printString("\nRelinquish\n>\0");
 			running_process->state = Ready;
 			AddToTail(&ready_queue, running_process);
 			need_dispatch = 1;       /* need dispatch of new process */
 		}
-		else if (requestType == BlockSelf) {
+		else if (requestType == 2) {
+			printString("\nBlockSelf\n>\0");
 			need_dispatch = QuenosCoreBlockSelf();
 		}
-		else if (requestType == Unblock){
+		else if (requestType == 3){
+			printString("\nUnblock\n>\0");
+			int other_pid = *(casted_prev_sp+4);
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
-		/* Fifth task: decide if dispatching of new process is needed. */
-		if (need_dispatch)
-		{
-			running_process = DequeueHead(&ready_queue);
-			running_process->state = Running;
-		}
+
 	}
+
+	/* Fifth task: decide if dispatching of new process is needed. */
+	if (need_dispatch)
+	{
+		running_process = DequeueHead(&ready_queue);
+		running_process->state = Running;
+	}
+
     // ISR ____________
 
     //TODO: we must update running process stack pointer here, with the new thing running
     /* Sixth task: switch back to user stack pointer and return */
-    (running_process->user_stack_pointer+4) = running_process->user_stack_pointer;
-    asm("ldw sp, 4(sp)");
+	kernel_stack_pointer = &kernel_stack[511];
+	process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an
@@ -178,17 +215,17 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
    to generate a return-from-interrupt instruction. */
 
 //@interrupt	void    QuenosDispatch (void)
-	void    QuenosDispatch (void)
-
+void    QuenosDispatch (void)
 {
+		printString("\nDispatch\n>\0");
         running_process = DequeueHead (&ready_queue);
         running_process->state = Running;
 		
 		// TODO: change all assembly to make sense
-		writeRegisterValueToSP(running_process->user_stack_pointer);
-
+		//writeRegisterValueToSP(running_process->user_stack_pointer);
         //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 
         //todo: how to generate a return from interrupt instruction from here for nios 2
         /* compiler generates a return-from-interrupt instruction here. */
 }
+

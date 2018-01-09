@@ -112,7 +112,8 @@ void the_exception (void)
   asm("movia r23, process_stack_pointer");
   asm("stw sp, 0(r23)");
 
-  asm ("ldw	r1,  4(sp)"); /* Restore all registers */
+/* Restore all registers */
+  asm ("ldw	r1,  4(sp)");
   asm ("ldw	r2,  8(sp)");
   asm ("ldw	r3,  12(sp)");
   asm ("ldw	r4,  16(sp)");

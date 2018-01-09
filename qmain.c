@@ -36,8 +36,8 @@ int     main ()
         QuenosInit ();
 
         /* create null process and add to ready queue */
-        QuenosNewProcess (NullProcess, NullProcessStack,
-                         NULL_PROCESS_STACK_SIZE);
+        /* QuenosNewProcess (NullProcess, NullProcessStack, */
+        /*                  NULL_PROCESS_STACK_SIZE); */
 
         /* create user processes and add to ready queue */
         UserProcesses ();

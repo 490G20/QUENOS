@@ -32,7 +32,7 @@ static  Process     process_array[MAX_NUM_OF_PROCESSES]; // Formerly pdb_array
 extern unsigned int process_stack_pointer;
 extern unsigned int ksp;
 unsigned int temporary_sp;
-unsigned char temporary_program_address;
+unsigned int temporary_program_address;
 
 void	put_jtag( volatile int* JTAG_UART_ptr, char c )
 {
@@ -113,7 +113,7 @@ void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
         new_process->pid	= new_pid;
         new_process->state	= Ready;
         new_process->user_stack_pointer		= stack_bottom + stack_size; // XXX: Confirm that this is correct
-        new_process->program_address = (unsigned char)((int) entry_point);
+        new_process->program_address = (unsigned int) entry_point;
 
         AddToTail (&ready_queue, new_process);
 }
@@ -154,28 +154,28 @@ static  int     need_dispatch;
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
-printf("yo im handlin yo interrupts, yo\n");
-	// First task: Update process control block for running process with stackpointer
-	running_process->user_stack_pointer = (void*) process_stack_pointer;
+        printf("yo\n");
+        // First task: Update process control block for running process with stackpointer
+        running_process->user_stack_pointer = (void*) process_stack_pointer;
 	unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
 
-    //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
-    //  UPDATE TO KERNEL STACK POINTER
-    int *dummy_address = (int *)running_process->user_stack_pointer + 1;
-    dummy_address = kernel_stack_pointer;
+        //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
+        //  UPDATE TO KERNEL STACK POINTER
+        int *dummy_address = (int *)running_process->user_stack_pointer + 1;
+        dummy_address = kernel_stack_pointer;
 
 	int requestType = *(casted_prev_sp+5);
 
 	int ipending;
 
-    /* Third task: retrieve arguments for kernel call. */
-    /* They are available on the user process stack. */
+        /* Third task: retrieve arguments for kernel call. */
+        /* They are available on the user process stack. */
 	ipending = NIOS2_READ_IPENDING(); // Read the interrupt
 
 	// TODO: read in request type from kernel? stack at offset 20(sp)
 
 	if (ipending) {
-		// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
+	// This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
 	}
 	else {
 		if (requestType == 1) {
@@ -213,7 +213,6 @@ printf("yo im handlin yo interrupts, yo\n");
    ready process to run. It is declared as an interrupt function only
    to generate a return-from-interrupt instruction. */
 
-//@interrupt	void    QuenosDispatch (void)
 void    QuenosDispatch (void)
 {
         running_process = DequeueHead (&ready_queue);
@@ -226,6 +225,10 @@ void    QuenosDispatch (void)
         asm("movia r3, temporary_program_address");
         asm("ldw sp, 0(r2)");
         asm("ldw r29, 0(r3)");
+        asm("movi r2, 0");
+        asm("movi r3, 0");
+
+        printf("hi\n");
 
         asm("eret");
         //todo: how to generate a return from interrupt instruction from here for nios 2

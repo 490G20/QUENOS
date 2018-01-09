@@ -92,7 +92,7 @@ void the_exception (void)
   asm ("stw	r22, 88(sp)");
   asm ("stw	r23, 92(sp)");
   asm ("stw	r25, 100(sp)"); /* r25 = bt (r24 = et, saved above) */
-  asm (	"stw	r26, 104(sp)"); /* r26 = gp */
+  asm ("stw	r26, 104(sp)"); /* r26 = gp */
   /* skip saving r27 because it is sp, and there is no point in saving sp */
   asm ("stw	r28, 112(sp)"); /* r28 = fp */
   asm ("stw	r29, 116(sp)"); /* r29 = ea */
@@ -100,10 +100,13 @@ void the_exception (void)
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
+  asm ("movia r22, process_stack_pointer)");
+  asm ("stw sp, 0(r22)");
+
   //move in address of ksp var into register
-  asm("movia r22, ksp"); //compiles if i dont do &ksp, but ksp instead
+  asm ("movia r23, ksp"); //compiles if i dont do &ksp, but ksp instead
   //store sp register value into kernel stack address, which needs to be in a register
-  asm("stw sp, 0(r22)");
+  asm ("ldw sp, 0(r23)");
 
   asm ("call	interrupt_handler"); /* call normal function */
 

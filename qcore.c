@@ -132,7 +132,7 @@ void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
         int             new_pid = num_of_processes++;	/* assign new pid */
         Process             *new_process; // Formerly pdb
 
-        printString("\nNewProcess pid:");
+        printString("New process created pid : ");
         printString(new_pid);
         printString("\n>\0");
 

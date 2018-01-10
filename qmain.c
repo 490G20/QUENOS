@@ -47,5 +47,5 @@ int     main()
         //cli(); // this used to clear the condition control register
 		
         /* start up the first process (we never return here) */
-        QuenosDispatch();
+        QuenosDispatch(); //TODO: issue: it returns here based on print statements
 }

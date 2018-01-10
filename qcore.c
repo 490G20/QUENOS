@@ -193,6 +193,7 @@ void    interrupt_handler (void)
 
     //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
     //  UPDATE TO KERNEL STACK POINTER
+    //TODO: Why the  +1 in below?
     int *dummy_address = (int *)running_process->user_stack_pointer + 1;
     dummy_address = kernel_stack_pointer;
 
@@ -256,10 +257,14 @@ void    QuenosDispatch (void)
         running_process->state = Running;
 		
 		// TODO: change all assembly to make sense
-		//writeRegisterValueToSP(running_process->user_stack_pointer);
-        //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 
         //todo: how to generate a return from interrupt instruction from here for nios 2
         /* compiler generates a return-from-interrupt instruction here. */
+        printf("now dispatching ");
+        printf(running_process->pid);
+        printf("\n");
+        process_stack_pointer = running_process->user_stack_pointer;
+
+        asm("eret");    //TODO: to force fompiler to generate a return from interrupt instruction here is asm directive use ok here?
 }
 

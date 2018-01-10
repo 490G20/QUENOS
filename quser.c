@@ -31,6 +31,7 @@ static	void    Process1 (void)
 {
         for (;;)
         {
+                printf("process 1 blocking self");
                 QuenosBlockSelf ();
         }
 }
@@ -39,7 +40,9 @@ static	void    Process2 (void)
 {
         for (;;)
         {
+            printf("process 2 about to unblock process 1 \n");
 			QuenosUnblock (1);
+            printf("process 2 now attempting to relinqush");
 			QuenosRelinquish ();
         }
 }

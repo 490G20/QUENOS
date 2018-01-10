@@ -98,21 +98,55 @@ R23
 /*----------------------------------------------------------------*/
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
+// Assumption this is meant to mock out the stack we would've saved in exception_handler.c
+typedef struct _stackframe
+{
+	// TODO: get peer review on math, offsets and testing
+	unsigned int //r24 et, 25 bt, 26 gp, 27 is sp and not saved, 28 fp, 29 ea, 30 ba, 31 ra
+			r1,r2,r3,r4,
+			r5,r6,r7,r8,
+			r9,r10,r11,r12,
+			r13,r14,r15,r16,
+			r17,r18,r19,r20,
+			r21,r22,r23,et,
+			bt,gp
 
+			//r27 is sp
+			,fp,ea,ba,ra;
+
+} StackFrame;
+
+/**
+ * Hardcoded new process that adds itself to the ready queue used to fake out initial history?
+ * initial contents of stack are set using the stackframe structure
+ *
+ * @param entry_point
+ * @param stack_bottom
+ * @param stack_size
+ */
 void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
                          int stack_size)
-{		
-		printString("\nNewProcess\n>\0");
-		//stackframe pointer deleted but not replaced? 
+{
+		StackFrame *sfp;
+		//stackframe pointer deleted but not replaced?
         int             new_pid = num_of_processes++;	/* assign new pid */
         Process             *new_process; // Formerly pdb
 
-        //create new process
+        printString("New process created pid : ");
+        printString(new_pid);
+        printString("\n>\0");
+
+   		 //create new process
         new_process		= &process_array[new_pid];	/* pointer to descriptor */
         new_process->pid	= new_pid;
         new_process->state	= Ready;
-        new_process->user_stack_pointer		= stack_bottom + stack_size; // XXX: Confirm that this is correct
+        new_process->user_stack_pointer		= stack_bottom + stack_size - sizeof(StackFrame); // XXX: Confirm that this is correct
 
+		// What are the parts of the stack frame we care about and will interact with?
+			// We must preload ea with the correct PC value
+			// Check if we need to preload correct value of estatus here
+		sfp->ea = (unsigned int) entry_point;
+	
         AddToTail (&ready_queue, new_process);
 }
 
@@ -150,7 +184,7 @@ static  int     need_dispatch;
 
 // This is called directly called by the DE2 hardware when a hardware interrupt occurs,
 // It is also called indirectly by the_exception(), the software interrupt
-void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
+void    interrupt_handler (void)
 {
 
 	// First task: Update process control block for running process with stackpointer
@@ -159,6 +193,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 
     //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
     //  UPDATE TO KERNEL STACK POINTER
+    //TODO: Why the  +1 in below?
     int *dummy_address = (int *)running_process->user_stack_pointer + 1;
     dummy_address = kernel_stack_pointer;
 
@@ -222,10 +257,14 @@ void    QuenosDispatch (void)
         running_process->state = Running;
 		
 		// TODO: change all assembly to make sense
-		//writeRegisterValueToSP(running_process->user_stack_pointer);
-        //asm("mov d,sp", running_process->user_stack_pointer); /* sets SP to user stack */
 
         //todo: how to generate a return from interrupt instruction from here for nios 2
         /* compiler generates a return-from-interrupt instruction here. */
+        printf("now dispatching ");
+        printf(running_process->pid);
+        printf("\n");
+        process_stack_pointer = running_process->user_stack_pointer;
+
+        asm("eret");    //TODO: to force fompiler to generate a return from interrupt instruction here is asm directive use ok here?
 }
 

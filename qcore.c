@@ -33,6 +33,8 @@ extern unsigned int process_stack_pointer;
 extern unsigned int ksp;
 unsigned int temporary_sp;
 unsigned int temporary_program_address;
+unsigned int temp_sp;
+unsigned int temp_program_address;
 
 void	put_jtag( volatile int* JTAG_UART_ptr, char c )
 {
@@ -115,6 +117,21 @@ void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
         new_process->user_stack_pointer		= stack_bottom + stack_size; // XXX: Confirm that this is correct
         new_process->program_address = (unsigned int) entry_point;
 
+        temp_sp = (unsigned int)new_process->user_stack_pointer;
+        temp_program_address = new_process->program_address;
+
+        asm("movia r12, temp_sp");
+        asm("movia r13, temp_program_address");
+        asm("ldw r15, 0(r12)");
+        asm("subi r15, r15, 128");
+        asm("ldw r14, 0(r13)");
+        asm("stw r14, 116(r15)");
+        asm("addi r15, r15, 128");
+        asm("movi r12, 0");
+        asm("movi r13, 0");
+        asm("movi r14, 0");
+        asm("movi r15, 0");
+
         AddToTail (&ready_queue, new_process);
 }
 
@@ -154,7 +171,7 @@ static  int     need_dispatch;
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
-        printf("yo\n");
+        printString("yo\n");
         // First task: Update process control block for running process with stackpointer
         running_process->user_stack_pointer = (void*) process_stack_pointer;
 	unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
@@ -188,6 +205,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 		}
 		else if (requestType == 3){
 			int other_pid = *(casted_prev_sp+4);
+                        printf("%d\n", other_pid);
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
 
@@ -219,16 +237,16 @@ void    QuenosDispatch (void)
         running_process->state = Running;
 
         temporary_sp = (unsigned int)running_process->user_stack_pointer;
-        temporary_program_address = running_process->program_address;
 
-        asm("movia r2, temporary_sp");
-        asm("movia r3, temporary_program_address");
-        asm("ldw sp, 0(r2)");
-        asm("ldw r29, 0(r3)");
-        asm("movi r2, 0");
-        asm("movi r3, 0");
+        asm("movia r12, temporary_sp");
+        asm("ldw sp, 0(r12)");
+        asm("subi sp, sp, 128");
+        /* asm("ldw r17, 0(sp)"); */
+        /* asm("stw r17, 0(r16)"); */
+        asm("ldw r29, 116(sp)");
+        asm("movi r12, 0");
 
-        printf("hi\n");
+        printString("hi\n");
 
         asm("eret");
         //todo: how to generate a return from interrupt instruction from here for nios 2

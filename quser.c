@@ -41,7 +41,7 @@ static	void    Process2 (void)
         for (;;)
         {
                 printf("y\n");
-		QuenosUnblock (1);
+		QuenosUnblock (0);
 	        QuenosRelinquish ();
         }
 }

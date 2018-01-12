@@ -61,7 +61,7 @@ void the_exception (void) __attribute__ ((section (".exceptions")));
 
 void the_exception (void)
 {
-  printf("OK\n");
+  //printf("OK\n");
   asm (".set noat");         /* the .set commands are included to prevent */
   asm (".set nobreak");      /* warning messages from the assembler */
   asm ("subi sp, sp, 128");
@@ -100,15 +100,19 @@ void the_exception (void)
   asm ("stw	r29, 116(sp)"); /* r29 = ea */
   asm ("stw	r30, 120(sp)"); /* r30 = ba */
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
-  asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
+
+	//merge conflict recheck
+  asm ("addi fp, sp, 128"); /* frame pointer adjustment */
+  asm("addi sp,sp, 128");
+  	// merge conflict above recheck
 
   asm ("movia r22, process_stack_pointer)");
   asm ("stw sp, 0(r22)");
 
-  //move in address of ksp var into register
-  asm ("movia r23, ksp"); //compiles if i dont do &ksp, but ksp instead
-  //store sp register value into kernel stack address, which needs to be in a register
+  asm ("movia r23, ksp");  //move in address of ksp var into register sp
+  asm ("stw r23, 0(r23)");
   asm ("ldw sp, 0(r23)");
+  
 
   asm ("call	interrupt_handler"); /* call normal function */
 

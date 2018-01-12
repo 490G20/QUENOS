@@ -31,7 +31,7 @@ static	void    Process1 (void)
 {
         for (;;)
         {
-                printf("x\n");
+                //printf("x\n");
                 QuenosBlockSelf ();
         }
 }
@@ -40,8 +40,8 @@ static	void    Process2 (void)
 {
         for (;;)
         {
-                printf("y\n");
-		QuenosUnblock (0);
+                //printf("y\n");
+		    QuenosUnblock (0);
 	        QuenosRelinquish ();
         }
 }

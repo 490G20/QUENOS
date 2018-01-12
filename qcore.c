@@ -114,23 +114,31 @@ void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
         new_process		= &process_array[new_pid];	/* pointer to descriptor */
         new_process->pid	= new_pid;
         new_process->state	= Ready;
+        //SUBTRACT THE SIZE OF 32 UNSIGNED INTS
         new_process->user_stack_pointer		= stack_bottom + stack_size; // XXX: Confirm that this is correct
+
         new_process->program_address = (unsigned int) entry_point;
 
         temp_sp = (unsigned int)new_process->user_stack_pointer;
         temp_program_address = new_process->program_address;
 
-        asm("movia r12, temp_sp");
-        asm("movia r13, temp_program_address");
-        asm("ldw r15, 0(r12)");
-        asm("subi r15, r15, 128");
-        asm("ldw r14, 0(r13)");
-        asm("stw r14, 116(r15)");
-        asm("addi r15, r15, 128");
-        asm("movi r12, 0");
-        asm("movi r13, 0");
-        asm("movi r14, 0");
-        asm("movi r15, 0");
+        asm("movia r12, temp_sp"); //r12 has address of sp
+        asm("movia r13, temp_program_address"); //r13 has address of desired pc/ea
+
+        asm("ldw r15, 0(r12)"); //put desired value of sp into r15
+        asm("subi r15, r15, 128"); //subtract 128
+
+        asm("ldw r14, 0(r13)"); //load desired temp program address into r14
+
+        asm("stw r14, 116(r15)"); //put the desired PC value at offset 128, which will hopefully be where ea is expected to be saved
+
+        asm("addi r15, r15, 128"); //restore reference value of sp
+
+        // Unknown if necessary, can't review and debug if we wipe this out
+//        asm("movi r12, 0");
+//        asm("movi r13, 0");
+//        asm("movi r14, 0");
+//        asm("movi r15, 0");
 
         AddToTail (&ready_queue, new_process);
 }
@@ -171,7 +179,7 @@ static  int     need_dispatch;
 // It is also called indirectly by the_exception(), the software interrupt
 void    interrupt_handler (void) //TODO: if we must move interrupt handler to separate file, then various interactions, how to adapt?
 {
-        printString("yo\n");
+        //printString("yo\n");
         // First task: Update process control block for running process with stackpointer
         running_process->user_stack_pointer = (void*) process_stack_pointer;
 	unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
@@ -205,7 +213,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 		}
 		else if (requestType == 3){
 			int other_pid = *(casted_prev_sp+4);
-                        printf("%d\n", other_pid);
+                      //  printf("%d\n", other_pid);
 			need_dispatch = QuenosCoreUnblock(other_pid);
 		}
 
@@ -222,8 +230,9 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 
     //TODO: we must update running process stack pointer here, with the new thing running
     /* Sixth task: switch back to user stack pointer and return */
-	kernel_stack_pointer = &kernel_stack[511];
-	process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
+	//kernel_stack_pointer = &kernel_stack[511];    //full R i don't know what's going on
+
+    process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an
@@ -238,15 +247,19 @@ void    QuenosDispatch (void)
 
         temporary_sp = (unsigned int)running_process->user_stack_pointer;
 
-        asm("movia r12, temporary_sp");
-        asm("ldw sp, 0(r12)");
-        asm("subi sp, sp, 128");
+        asm("movia r12, temporary_sp"); //r12 has address of temporary_sp
+        asm("ldw sp, 0(r12)"); // move sp value into sp register
+
+        asm("subi sp, sp, 128"); //subtract 128 from sp
         /* asm("ldw r17, 0(sp)"); */
         /* asm("stw r17, 0(r16)"); */
-        asm("ldw r29, 116(sp)");
-        asm("movi r12, 0");
 
-        printString("hi\n");
+        asm("ldw ea, 116(sp)"); // load what we hope to be desired value for PC into ea, from stack
+//        asm("movi r12, 0"); // 0 out r12
+
+        //asm("addi sp,sp, 128");
+
+//        printString("hi\n");
 
         asm("eret");
         //todo: how to generate a return from interrupt instruction from here for nios 2

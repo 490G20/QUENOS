@@ -61,7 +61,7 @@ void the_exception (void) __attribute__ ((section (".exceptions")));
 
 void the_exception (void)
 {
-  printf("OK\n");
+  //printf("OK\n");
   asm (".set noat");         /* the .set commands are included to prevent */
   asm (".set nobreak");      /* warning messages from the assembler */
   asm ("subi sp, sp, 128");
@@ -108,7 +108,7 @@ void the_exception (void)
   //move in address of ksp var into register
   asm ("movia r23, ksp"); //compiles if i dont do &ksp, but ksp instead
   //store sp register value into kernel stack address, which needs to be in a register
-  asm ("ldw sp, 0(r23)");
+  asm ("ldw sp, 0(r23)"); //TODO: INVESTIGATE IF THIS WORKS AS EXPECTED
 
   asm ("call	interrupt_handler"); /* call normal function */
 

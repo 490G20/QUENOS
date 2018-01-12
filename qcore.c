@@ -189,7 +189,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         int *dummy_address = (int *)running_process->user_stack_pointer + 1;
         dummy_address = kernel_stack_pointer;
 
-	int requestType = *(casted_prev_sp+5);
+	int requestType = *(casted_prev_sp-27);
 
 	int ipending;
 
@@ -233,6 +233,9 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 	//kernel_stack_pointer = &kernel_stack[511]; // Unnecessary perhaps
     
     process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
+	asm("movia r5, ksp");
+	asm("stw sp, 0(r5)");
+	
 }
 
 /* The following function is called _directly_ (i.e., _not_ through an
@@ -244,7 +247,9 @@ void    QuenosDispatch (void)
 {
         running_process = DequeueHead (&ready_queue);
         running_process->state = Running;
-
+		asm("movia r5, ksp");
+		//asm("ldw r5, 0(r5)");
+		asm("stw r5, 0(r5)");
         temporary_sp = (unsigned int)running_process->user_stack_pointer;
 
         asm("movia r12, temporary_sp"); //r12 has address of temporary_sp
@@ -257,7 +262,7 @@ void    QuenosDispatch (void)
         asm("ldw ea, 116(sp)"); // load what we hope to be desired value for PC into ea, from stack
 //        asm("movi r12, 0"); // 0 out r12
 
-        //asm("addi sp,sp, 128");
+        asm("addi sp,sp, 128");
 
 //        printString("hi\n");
 

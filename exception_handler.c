@@ -100,12 +100,15 @@ void the_exception (void)
   asm ("stw	r29, 116(sp)"); /* r29 = ea */
   asm ("stw	r30, 120(sp)"); /* r30 = ba */
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
-  asm ("addi	sp,  sp, 128"); /* frame pointer adjustment */
-
+  asm ("addi fp, sp, 128"); /* frame pointer adjustment */
+  asm("addi sp,sp, 128");
   asm ("movia r22, process_stack_pointer)");
   asm ("stw sp, 0(r22)");
 
-  asm ("movia sp, ksp");  //move in address of ksp var into register sp
+  asm ("movia r23, ksp");  //move in address of ksp var into register sp
+  asm ("stw r23, 0(r23)");
+  asm ("ldw sp, 0(r23)");
+  
 
   asm ("call	interrupt_handler"); /* call normal function */
 

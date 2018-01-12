@@ -100,8 +100,12 @@ void the_exception (void)
   asm ("stw	r29, 116(sp)"); /* r29 = ea */
   asm ("stw	r30, 120(sp)"); /* r30 = ba */
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
+
+	//merge conflict recheck
   asm ("addi fp, sp, 128"); /* frame pointer adjustment */
   asm("addi sp,sp, 128");
+  	// merge conflict above recheck
+
   asm ("movia r22, process_stack_pointer)");
   asm ("stw sp, 0(r22)");
 

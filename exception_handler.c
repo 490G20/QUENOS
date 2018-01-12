@@ -105,10 +105,7 @@ void the_exception (void)
   asm ("movia r22, process_stack_pointer)");
   asm ("stw sp, 0(r22)");
 
-  //move in address of ksp var into register
-  asm ("movia sp, ksp"); //compiles if i dont do &ksp, but ksp instead
-  //store sp register value into kernel stack address, which needs to be in a register
-  //asm ("ldw sp, 0(r23)"); //TODO: INVESTIGATE IF THIS WORKS AS EXPECTED
+  asm ("movia sp, ksp");  //move in address of ksp var into register sp
 
   asm ("call	interrupt_handler"); /* call normal function */
 

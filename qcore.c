@@ -114,7 +114,7 @@ void    QuenosNewProcess (void (*entry_point) (void), char *stack_bottom,
         new_process		= &process_array[new_pid];	/* pointer to descriptor */
         new_process->pid	= new_pid;
         new_process->state	= Ready;
-        //SUBTRACT THE SIZE OF 32 UNSIGNED INTS
+        //TODO: ask if we need to SUBTRACT THE SIZE OF 28 unsigned ints
         new_process->user_stack_pointer		= stack_bottom + stack_size; // XXX: Confirm that this is correct
 
         new_process->program_address = (unsigned int) entry_point;
@@ -230,8 +230,8 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 
     //TODO: we must update running process stack pointer here, with the new thing running
     /* Sixth task: switch back to user stack pointer and return */
-	//kernel_stack_pointer = &kernel_stack[511];    //full R i don't know what's going on
-
+	//kernel_stack_pointer = &kernel_stack[511]; // Unnecessary perhaps
+    
     process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
 }
 

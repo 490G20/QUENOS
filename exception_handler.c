@@ -25,6 +25,7 @@
 
 unsigned int process_stack_pointer; //no static, is default global
 unsigned int ksp;
+unsigned int temp;
 
 /* The assembly language code below handles processor reset */
 void the_reset (void) __attribute__ ((section (".reset")));

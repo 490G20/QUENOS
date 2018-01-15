@@ -161,11 +161,6 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
         running_process->user_stack_pointer = (void*) process_stack_pointer;
 	unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
 
-        //TODO: SAVE CURRENTLY RUNNING PROCESS STACK POINTER HERE
-        //  UPDATE TO KERNEL STACK POINTER
-        int *dummy_address = (int *)running_process->user_stack_pointer + 1;
-        dummy_address = kernel_stack_pointer;
-
         int requestType = *(casted_prev_sp+5);
 
 	int ipending;
@@ -200,13 +195,14 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 	{
 		running_process = DequeueHead(&ready_queue);
 		running_process->state = Running;
+                printf("%d\n", running_process->pid);
 	}
 
     // ISR ____________
 
     //TODO: we must update running process stack pointer here, with the new thing running
     /* Sixth task: switch back to user stack pointer and return */
-	//kernel_stack_pointer = &kernel_stack[511];
+	ksp = &kernel_stack[511];
 	process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
 }
 
@@ -226,8 +222,6 @@ void    QuenosDispatch (void)
         asm("ldw sp, 0(r12)");
         asm("ldw r29, 116(sp)");
         asm("addi sp, sp, 128");
-
-        printString("hi\n");
 
         asm("eret");
         //todo: how to generate a return from interrupt instruction from here for nios 2

@@ -111,6 +111,10 @@ void the_exception (void)
 
   asm ("call	interrupt_handler"); /* call normal function */
 
+  // save kernel stack pointer
+  asm ("movia r23, ksp");
+  asm ("stw sp, 0(r23)");
+
   //move process stack pointer address into a register
   //store register sp contents into that memory address
   asm("movia r21, process_stack_pointer");

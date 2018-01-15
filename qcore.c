@@ -202,7 +202,7 @@ void    interrupt_handler (void) //TODO: if we must move interrupt handler to se
 
     //TODO: we must update running process stack pointer here, with the new thing running
     /* Sixth task: switch back to user stack pointer and return */
-	ksp = &kernel_stack[511];
+	/* ksp = &kernel_stack[511]; */
 	process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
 }
 

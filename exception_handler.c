@@ -25,7 +25,6 @@
 
 unsigned int process_stack_pointer; //no static, is default global
 unsigned int ksp;
-unsigned int temp;
 
 /* The assembly language code below handles processor reset */
 void the_reset (void) __attribute__ ((section (".reset")));
@@ -61,14 +60,13 @@ void the_exception (void) __attribute__ ((section (".exceptions")));
 
 void the_exception (void)
 {
-  printf("OK\n");
   asm (".set noat");         /* the .set commands are included to prevent */
   asm (".set nobreak");      /* warning messages from the assembler */
   asm ("subi sp, sp, 128");
   asm ("stw  et, 96(sp)");
   asm ("rdctl et, ipending"); /* changed 'ctl4' to 'ipending' for clarity */
   asm ("beq  et, r0, SKIP_EA_DEC");   /* Not a hardware interrupt, */
-  asm ("subi ea, ea, 4");             /* so decrement ea by one instruction */ 
+  asm ("subi ea, ea, 4");             /* so decrement ea by one instruction */
   asm ("SKIP_EA_DEC:");
   asm ("stw	r1,  4(sp)"); /* Save all registers */
   asm ("stw	r2,  8(sp)");
@@ -100,25 +98,23 @@ void the_exception (void)
   asm ("stw	r29, 116(sp)"); /* r29 = ea */
   asm ("stw	r30, 120(sp)"); /* r30 = ba */
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
+
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
-  asm ("movia r22, process_stack_pointer)");
+  asm ("movia r22, process_stack_pointer");
   asm ("stw sp, 0(r22)");
 
   //move in address of ksp var into register
-  asm ("movia r23, ksp"); //compiles if i dont do &ksp, but ksp instead
-  //store sp register value into kernel stack address, which needs to be in a register
+  asm ("movia r23, ksp");
   asm ("ldw sp, 0(r23)");
 
   asm ("call	interrupt_handler"); /* call normal function */
 
   //move process stack pointer address into a register
   //store register sp contents into that memory address
-  asm("stw r21, 84(sp)");
   asm("movia r21, process_stack_pointer");
   asm("ldw sp, 0(r21)");
 
-  asm("subi sp, sp, 128");
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");
   asm ("ldw	r3,  12(sp)");
@@ -160,5 +156,5 @@ void the_exception (void)
      instruction. But with the above eret instruction embedded
      in the final output from the compiler, that end-of-function code
      will never be executed.
-   */ 
+   */
 }

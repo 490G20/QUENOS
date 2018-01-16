@@ -39,6 +39,7 @@ void    QuenosUnblock (int other_pid) {
 //From manji: You will need to produce a basic operational Nios II kernel that can handle a couple of simple processes
 // that relinquish/block/unblock in the manner reflected in the sample quser.c file in the above package.
 // Then extend basic
+
 static	void    Process1 (void)
 {
         for (;;)
@@ -53,7 +54,7 @@ static	void    Process2 (void)
         for (;;)
         {
                 printf("b\n");
-		QuenosUnblock (0);
+		QuenosUnblock (1);
 	        KernelRelinquish();
         }
 }

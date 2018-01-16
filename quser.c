@@ -23,11 +23,7 @@ static  char    P2stack[USER_STACK_SIZE];
 
 /*----------------------------------------------------------------*/
 
-void	UserProcesses (void)
-{
-	QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
-}
+
 
 /* ------- Code below is from qrequest.c --------- */
 
@@ -59,6 +55,12 @@ static	void    Process2 (void)
 		QuenosUnblock (0);
 	        KernelRelinquish();
         }
+}
+
+void	UserProcesses (void)
+{
+	QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
+    QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
 }
 
 /*----------------------------------------------------------------*/

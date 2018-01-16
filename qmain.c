@@ -26,7 +26,7 @@ static  char    NullProcessStack[NULL_PROCESS_STACK_SIZE];
 
 void    NullProcess (void)
 {
-	QuenosRelinquish ();	/* null process simply surrenders processor */
+	KernelRelinquish();	/* null process simply surrenders processor */
 }
 
 int     main ()

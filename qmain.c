@@ -12,7 +12,6 @@ DESCRIPTION:	Startup code for the QUERK kernel. Sets software interrupt
 
 #include "qinit.h"
 #include "qcore.h"
-#include "qrequest.h"
 #include "quser.h"
 
 /*----------------------------------------------------------------*/

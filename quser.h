@@ -16,8 +16,6 @@ extern  void    UserProcesses (void);
 // This is done as an attempt to remove the qrequest.c/.h files from the program as we believe they are redundant and may be messing up our stack pointer 
 typedef enum    {Relinquish, BlockSelf, Unblock} Request;
 
-extern	void    QuenosRelinquish (void);
-extern	void    QuenosBlockSelf (void);
 extern	void    QuenosUnblock (int other_pid);
 
 extern void KernelRelinquish(void);

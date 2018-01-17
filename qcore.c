@@ -220,7 +220,7 @@ void    QuenosDispatch (void)
 
         asm("movia r12, temporary_sp");
         asm("ldw sp, 0(r12)");
-        asm("ldw r29, 116(sp)");
+        asm("ldw ea, 116(sp)");
         asm("addi sp, sp, 128");
 
         asm("eret");

@@ -117,8 +117,8 @@ void the_exception (void)
 
   //move process stack pointer address into a register
   //store register sp contents into that memory address
-  asm("movia r21, process_stack_pointer");
-  asm("ldw sp, 0(r21)");
+  asm ("movia r21, process_stack_pointer");
+  asm ("ldw sp, 0(r21)");
 
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");

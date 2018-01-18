@@ -19,7 +19,9 @@ KernelRelinquish:
     subi sp, sp, 4
     stw r5, 0(sp)
     movi r5,1 #relinquish enum
+    addi sp, sp, 4
     trap
+    subi sp, sp, 4
     ldw r5, 0(sp)
     addi sp,sp,4
 	ret
@@ -28,7 +30,9 @@ KernelBlock:
     subi sp, sp, 4
     stw r5, 0(sp)
     movi r5,2 #block self enum
+    addi sp, sp, 4
     trap
+    subi sp, sp, 4
     ldw r5, 0(sp)
     addi sp,sp,4
 	ret
@@ -39,7 +43,9 @@ KernelUnblock:
     stw r5, 4(sp)
     stw r4, 0(sp)
     movi r5,3 #unblock enum
+    addi sp,sp,8
     trap
+    subi sp, sp, 8
     ldw r5, 4(sp)
     ldw r4, 0(sp)
     addi sp,sp,8

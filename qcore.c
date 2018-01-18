@@ -153,6 +153,7 @@ void interrupt_handler (void)
    to generate a return-from-interrupt instruction. */
 void QuenosDispatch (void)
 {
+  printf("hi\n");
   running_process = DequeueHead (&ready_queue);
   running_process->state = Running;
 

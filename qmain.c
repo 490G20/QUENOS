@@ -20,7 +20,9 @@ static char NullProcessStack[NULL_PROCESS_STACK_SIZE];
 
 void NullProcess (void)
 {
-  KernelRelinquish();	/* null process simply surrenders processor */
+  for (;;) {
+    KernelRelinquish();	/* null process simply surrenders processor */
+  }
 }
 
 int main ()

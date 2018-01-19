@@ -164,6 +164,10 @@ void interrupt_handler (void)
   {
   	running_process = DequeueHead(&ready_queue);
   	running_process->state = Running;
+	
+	printString('CP: ')
+	put_jtag(JTAG_UART_ptr,'0'+running_process->pid);
+	put_jtag(JTAG_UART_ptr,'\n');
   }
 
   process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger

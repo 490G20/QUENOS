@@ -11,43 +11,56 @@ DESCRIPTION:	The core of the QUERK kernel. Includes the software interrupt
 
 #include "qcore.h"
 #include "queue.h"
-#include "quser.h"
+#include "qrequest.h"
 #include "nios2_ctrl_reg_macros.h"
 
-static Queue ready_queue;
 static Process *running_process;
+
+static Queue ready_queue;
+
+volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+
 static Process process_array[MAX_NUM_OF_PROCESSES];
 
 static char kernel_stack[512];
-static void *kernel_stack_pointer = (void *) &kernel_stack[511];
 
 static int num_of_processes = 0;
+static int num_of_queue_items = 0;
+
 static int need_dispatch;
 
 extern unsigned int process_stack_pointer;
-extern unsigned int ksp = &kernel_stack_pointer;
+extern unsigned int ksp = (unsigned int) &kernel_stack[511];
 unsigned int temporary_sp;
 unsigned int temp_sp;
 
-volatile int* JTAG_UART_ptr = (int*) 0x10001000;
 
-void put_jtag(volatile int* JTAG_UART_ptr, char c)
+
+void	put_jtag( volatile int* JTAG_UART_ptr, char c )
 {
-  int control;
-  control = *(JTAG_UART_ptr + 1); // read the JTAG_UART Control register
-
-  if(control & 0xFFFF0000) { // if space, then echo character, else ignore
-          *(JTAG_UART_ptr) = c;
-  }
+	while ((*(JTAG_UART_ptr + 1) & 0xFFFF0000) == 0)
+		;
+	*(JTAG_UART_ptr) = c;
 }
 
-void printString(char text_string[])
+void printString(char *text_string )
 {
     int i =0;
-    for(i = 0; text_string[i] != 0; ++i){
+    for(i = 0; text_string[i] != 0; ++i){ // print a text string
         put_jtag (JTAG_UART_ptr, text_string[i]);
     }
 }
+
+void showReadyQueue (void) {
+	Process * p = ready_queue.head;
+	printString("queue: ");
+	while (p!=0){
+		put_jtag(JTAG_UART_ptr,'0'+p->pid);
+		p = p->next;
+	}
+	put_jtag(JTAG_UART_ptr,'\n');
+}
+
 
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
@@ -73,7 +86,12 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
   asm ("ldw r13, 0(r12)");
   asm ("stw r26, 104(r13)");
 
+  printString("NP \n");
+  showReadyQueue();
+  
   AddToTail (&ready_queue, new_process);
+  
+  showReadyQueue();
 }
 
 /* functions for kernel services */
@@ -106,6 +124,7 @@ static int QuenosCoreUnblock (int other_pid)
 // It is also called indirectly by the_exception(), the software interrupt
 void interrupt_handler (void)
 {
+	printString("i\n");
   // First task: Update process control block for running process with stackpointer
   running_process->user_stack_pointer = (void*) process_stack_pointer;
   unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
@@ -123,9 +142,12 @@ void interrupt_handler (void)
   }
   else {
   	if (requestType == 1) {
+		printString("r\n");
+		showReadyQueue();
   		running_process->state = Ready;
   		AddToTail(&ready_queue, running_process);
   		need_dispatch = 1;       /* need dispatch of new process */
+		showReadyQueue();
   	}
   	else if (requestType == 2) {
   		need_dispatch = QuenosCoreBlockSelf();
@@ -153,10 +175,14 @@ void interrupt_handler (void)
    to generate a return-from-interrupt instruction. */
 void QuenosDispatch (void)
 {
-  printf("hi\n");
+  printString("QD\n");
+  showReadyQueue();
+  
   running_process = DequeueHead (&ready_queue);
   running_process->state = Running;
-
+  
+  showReadyQueue();
+  
   temporary_sp = (unsigned int)running_process->user_stack_pointer;
 
   asm("movia r12, temporary_sp");

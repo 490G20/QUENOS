@@ -11,7 +11,7 @@ DESCRIPTION:	The core of the QUERK kernel. Includes the software interrupt
 
 #include "qcore.h"
 #include "queue.h"
-#include "qrequest.h"
+#include "quser.h"
 #include "nios2_ctrl_reg_macros.h"
 
 static Process *running_process;

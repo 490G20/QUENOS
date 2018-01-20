@@ -15,7 +15,6 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 
 #include "quser.h"
 #include "qcore.h"
-#include "qrequest.h"
 
 #define USER_STACK_SIZE 256
 
@@ -25,7 +24,9 @@ static  char    P2stack[USER_STACK_SIZE];
 /**
  * Application binary interface documentation says other_pid will be passed into r4
  */
-
+void    QuenosUnblock (int other_pid) {
+    KernelUnblock();
+}
 
 // You will need to produce a basic operational Nios II kernel that can handle a couple of simple processes
 // that relinquish/block/unblock in the manner reflected in the sample quser.c file in the above package.
@@ -33,9 +34,8 @@ static	void    Process1 (void)
 {
         for (;;)
         {
-                printString("a\n");
-                //QuenosBlockSelf ();
-				QuenosRelinquish ();
+                printf("a\n");
+                KernelBlock();
         }
 }
 
@@ -43,9 +43,9 @@ static	void    Process2 (void)
 {
         for (;;)
         {
-                printString("b\n");
-				//QuenosUnblock (1);
-				QuenosRelinquish ();
+                printf("b\n");
+		QuenosUnblock (1);
+	        KernelRelinquish();
         }
 }
 

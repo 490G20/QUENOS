@@ -12,7 +12,6 @@ DESCRIPTION:	Startup code for the QUERK kernel. Sets software interrupt
 
 #include "qinit.h"
 #include "qcore.h"
-#include "qrequest.h"
 #include "quser.h"
 
 #define NULL_PROCESS_STACK_SIZE 256 // TODO: confirm is same for altera nios 2, if not update
@@ -22,7 +21,7 @@ static char NullProcessStack[NULL_PROCESS_STACK_SIZE];
 void NullProcess (void)
 {
   for (;;) {
-    QuenosRelinquish ();	/* null process simply surrenders processor */
+    KernelRelinquish();	/* null process simply surrenders processor */
   }
 }
 

@@ -150,17 +150,11 @@ void interrupt_handler (void)
 		showReadyQueue();
   	}
   	else if (requestType == 2) {
-		printString("blk\n");
-		showReadyQueue();
   		need_dispatch = QuenosCoreBlockSelf();
-		showReadyQueue();
   	}
   	else if (requestType == 3){
   		int other_pid = *(casted_prev_sp+4);
-		printString("unblk\n");
-		showReadyQueue();
   		need_dispatch = QuenosCoreUnblock(other_pid);
-		showReadyQueue();
   	}
 
   }
@@ -171,7 +165,7 @@ void interrupt_handler (void)
   	running_process = DequeueHead(&ready_queue);
   	running_process->state = Running;
 	
-	printString("CP: ");
+	printString('CP: ')
 	put_jtag(JTAG_UART_ptr,'0'+running_process->pid);
 	put_jtag(JTAG_UART_ptr,'\n');
   }

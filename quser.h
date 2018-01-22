@@ -12,5 +12,11 @@ DESCRIPTION:	Declarations for user-supplied function to create
 ******************************************************************************/
 
 extern  void    UserProcesses (void);
+typedef enum    {Relinquish, BlockSelf, Unblock} Request;
 
+extern	void    QuenosUnblock (int other_pid);
+
+extern void KernelRelinquish(void);
+extern void KernelBlock(void);
+extern void KernelUnblock(void);
 #endif /* _QUSER_H_ */

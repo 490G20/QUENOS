@@ -66,7 +66,7 @@ void the_exception (void)
   asm ("stw  et, 96(sp)");
   asm ("rdctl et, ipending"); /* changed 'ctl4' to 'ipending' for clarity */
   asm ("beq  et, r0, SKIP_EA_DEC");   /* Not a hardware interrupt, */
-  asm ("subi ea, ea, 4");             /* so decrement ea by one instruction */ 
+  asm ("subi ea, ea, 4");             /* so decrement ea by one instruction */
   asm ("SKIP_EA_DEC:");
   asm ("stw	r1,  4(sp)"); /* Save all registers */
   asm ("stw	r2,  8(sp)");
@@ -92,25 +92,32 @@ void the_exception (void)
   asm ("stw	r22, 88(sp)");
   asm ("stw	r23, 92(sp)");
   asm ("stw	r25, 100(sp)"); /* r25 = bt (r24 = et, saved above) */
-  asm (	"stw	r26, 104(sp)"); /* r26 = gp */
+  asm ("stw	r26, 104(sp)"); /* r26 = gp */
   /* skip saving r27 because it is sp, and there is no point in saving sp */
   asm ("stw	r28, 112(sp)"); /* r28 = fp */
   asm ("stw	r29, 116(sp)"); /* r29 = ea */
   asm ("stw	r30, 120(sp)"); /* r30 = ba */
   asm ("stw	r31, 124(sp)"); /* r31 = ra */
+
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
-  //move in address of ksp var into register
-  asm("movia r22, ksp"); //compiles if i dont do &ksp, but ksp instead
-  //store sp register value into kernel stack address, which needs to be in a register
-  asm("stw sp, 0(r22)");
+  asm ("movia r22, process_stack_pointer");
+  asm ("stw sp, 0(r22)");
+
+  // Change value of register sp to that of kernel stack pointer
+  asm ("movia r23, ksp");
+  asm ("ldw sp, 0(r23)");
 
   asm ("call	interrupt_handler"); /* call normal function */
 
+  // Update kernel stack pointer
+  asm ("movia r23, ksp");
+  asm ("stw sp, 0(r23)");
+
   //move process stack pointer address into a register
   //store register sp contents into that memory address
-  asm("movia r23, process_stack_pointer");
-  asm("stw sp, 0(r23)");
+  asm ("movia r21, process_stack_pointer");
+  asm ("ldw sp, 0(r21)");
 
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");
@@ -153,5 +160,5 @@ void the_exception (void)
      instruction. But with the above eret instruction embedded
      in the final output from the compiler, that end-of-function code
      will never be executed.
-   */ 
+   */
 }

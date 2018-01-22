@@ -29,7 +29,6 @@ int main ()
 {
   /* initialize interrupt vectors and any other things... */
   QuenosInit ();
-
   /* create null process and add to ready queue */
   QuenosNewProcess (NullProcess, NullProcessStack,
                    NULL_PROCESS_STACK_SIZE);

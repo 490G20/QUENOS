@@ -16,9 +16,8 @@ void    AddToTail (Queue *queue, Process *process)
 {
         process->prev = queue->tail;
         process->next = 0;
-        if (queue->head != 0) {
+        if (queue->head != 0)
                 queue->tail->next = process;
-        }
         else
                 queue->head = process;
         queue->tail = process;

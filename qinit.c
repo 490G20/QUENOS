@@ -7,8 +7,6 @@ DESCRIPTION:	Definition of function for initialization on startup.
 		Queen's University
 ******************************************************************************/
 
-#include "qcore.h"
-#include "DBug12.h"
 #include "nios2_ctrl_reg_macros.h"
 
 void QuenosInit (void)

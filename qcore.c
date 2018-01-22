@@ -11,7 +11,6 @@ DESCRIPTION:	The core of the QUERK kernel. Includes the software interrupt
 
 #include "qcore.h"
 #include "queue.h"
-#include "quser.h"
 #include "nios2_ctrl_reg_macros.h"
 
 static Process *running_process;
@@ -25,16 +24,11 @@ static Process process_array[MAX_NUM_OF_PROCESSES];
 static char kernel_stack[512];
 
 static int num_of_processes = 0;
-static int num_of_queue_items = 0;
 
 static int need_dispatch;
 
 extern unsigned int process_stack_pointer;
 extern unsigned int ksp = (unsigned int) &kernel_stack[511];
-unsigned int temporary_sp;
-unsigned int temp_sp;
-
-
 
 void	put_jtag( volatile int* JTAG_UART_ptr, char c )
 {
@@ -51,6 +45,9 @@ void printString(char *text_string )
     }
 }
 
+/**
+ *  Prints out the ready queue, used for debugging
+ */
 void showReadyQueue (void) {
 	Process * p = ready_queue.head;
 	printString("queue: ");
@@ -80,11 +77,12 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
   unsigned int* p = (unsigned int*) new_process->user_stack_pointer + 29;
   *p = new_process->program_address;
 
+  unsigned int temp_sp;
   temp_sp = new_process->user_stack_pointer;
 
   asm ("movia r12, temp_sp");
   asm ("ldw r13, 0(r12)");
-  asm ("stw r26, 104(r13)");
+  asm ("stw gp, 104(r13)");
 
   printString("NP \n");
   showReadyQueue();
@@ -192,12 +190,11 @@ void QuenosDispatch (void)
   running_process->state = Running;
   
   showReadyQueue();
-  
-  temporary_sp = (unsigned int)running_process->user_stack_pointer;
-
-  asm("movia r12, temporary_sp");
+  unsigned int sp_of_first_process;
+    sp_of_first_process = (unsigned int)running_process->user_stack_pointer;
+  asm("movia r12, sp_of_first_process");
   asm("ldw sp, 0(r12)");
-  asm("ldw r29, 116(sp)");
+  asm("ldw ea, 116(sp)");
   asm("addi sp, sp, 128");
 
   asm("eret");

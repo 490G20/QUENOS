@@ -193,7 +193,6 @@ void QuenosDispatch (void)
     showReadyQueue();
     sp_of_first_process = (unsigned int)running_process->user_stack_pointer;
 
-
     asm("movia r12, sp_of_first_process");
     asm("ldw sp, 0(r12)");
     asm("ldw ea, 116(sp)");

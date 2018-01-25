@@ -11,7 +11,7 @@ DESCRIPTION:	Type definitions and function declarations for core of
 		Queen's University
 ******************************************************************************/
 
-typedef enum {READY, RUNNING, BLOCKED} State;
+typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE} State;
 
 typedef struct  _process // Formerly _pdb
 {
@@ -23,6 +23,12 @@ typedef struct  _process // Formerly _pdb
         void    *user_stack_pointer;		/* saves user stack pointer when not running */
         unsigned int program_address;
 } Process; // Formerly pdb
+
+typedef struct _message {
+	struct _message *prev;
+	struct _message *next;
+	char* data; // Revise into hardcoded, and do dynamic mem allocation later if necessary for proof of concept
+} Message;
 
 #define MAX_NUM_OF_PROCESSES 16
 

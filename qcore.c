@@ -102,6 +102,22 @@ static int QuenosCoreBlockSelf (void)
     return 1; /* need dispatch of new process */
 }
 
+// may need header in header file for use in other method?
+static void QuenosCoreSendMessage(int target_pid, Message *m){	
+	// Shove message (address?) somewhere kernel can get at it
+
+	if (process_array[other_pid].state == WAITING_FOR_MESSAGE){
+		/* only unblock and add to ready queue if it was blocked */
+        process_array[other_pid].state = READY;
+        AddToTail (&ready_queue, &process_array[other_pid]);
+    }
+		
+
+	// Relinquish kernel here or in the IH preferable?
+	
+	// Dispatch something
+}
+
 static int QuenosCoreUnblock (int other_pid)
 {
     if (process_array[other_pid].state == BLOCKED)
@@ -163,6 +179,32 @@ void interrupt_handler (void)
                 need_dispatch = QuenosCoreUnblock(other_pid);
                 showReadyQueue();
             }
+			else if (requestType == SEND_MESSAGE){
+				printString("send\n");
+				showReadyQueue();
+				
+				// Append message to place @ target process' PCB 
+				
+				
+                running_process->state = READY;
+                AddToTail(&ready_queue, running_process);
+				
+                need_dispatch = 1;       /*relinquish need dispatch of new process */
+                showReadyQueue();
+			}
+			else if (requestType == READ_MESSAGE){
+				printString("read\n");
+				showReadyQueue();
+				
+				# Get message chain link PCB
+				
+                running_process->state = READY;
+                AddToTail(&ready_queue, running_process);
+				
+                need_dispatch = 1;       /* need dispatch of new process */
+                showReadyQueue();
+			}
+			
 
     }
 

@@ -25,7 +25,6 @@
 
 unsigned int process_stack_pointer; //no static, is default global
 unsigned int ksp;
-unsigned int temp;
 
 /* The assembly language code below handles processor reset */
 void the_reset (void) __attribute__ ((section (".reset")));
@@ -105,20 +104,20 @@ void the_exception (void)
   asm ("movia r22, process_stack_pointer");
   asm ("stw sp, 0(r22)");
 
-  //move in address of ksp var into register
+  // Change value of register sp to that of kernel stack pointer
   asm ("movia r23, ksp");
   asm ("ldw sp, 0(r23)");
 
   asm ("call	interrupt_handler"); /* call normal function */
 
-  // save kernel stack pointer
+  // Update kernel stack pointer
   asm ("movia r23, ksp");
   asm ("stw sp, 0(r23)");
 
   //move process stack pointer address into a register
   //store register sp contents into that memory address
-  asm("movia r21, process_stack_pointer");
-  asm("ldw sp, 0(r21)");
+  asm ("movia r21, process_stack_pointer");
+  asm ("ldw sp, 0(r21)");
 
   asm ("ldw	r1,  4(sp)"); /* Restore all registers */
   asm ("ldw	r2,  8(sp)");

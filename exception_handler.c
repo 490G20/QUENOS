@@ -91,13 +91,13 @@ void the_exception (void)
   asm ("stw	r21, 84(sp)");
   asm ("stw	r22, 88(sp)");
   asm ("stw	r23, 92(sp)");
-  asm ("stw	r25, 100(sp)"); /* r25 = bt (r24 = et, saved above) */
-  asm ("stw	r26, 104(sp)"); /* r26 = gp */
+  asm ("stw	bt, 100(sp)"); /* r25 = bt (r24 = et, saved above) */
+  asm ("stw	gp, 104(sp)"); /* r26 = gp */
   /* skip saving r27 because it is sp, and there is no point in saving sp */
-  asm ("stw	r28, 112(sp)"); /* r28 = fp */
-  asm ("stw	r29, 116(sp)"); /* r29 = ea */
-  asm ("stw	r30, 120(sp)"); /* r30 = ba */
-  asm ("stw	r31, 124(sp)"); /* r31 = ra */
+  asm ("stw	fp, 112(sp)"); /* r28 = fp */
+  asm ("stw	ea, 116(sp)"); /* r29 = ea */
+  asm ("stw	ba, 120(sp)"); /* r30 = ba */
+  asm ("stw	ra, 124(sp)"); /* r31 = ra */
 
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
@@ -142,14 +142,14 @@ void the_exception (void)
   asm ("ldw	r21, 84(sp)");
   asm ("ldw	r22, 88(sp)");
   asm ("ldw	r23, 92(sp)");
-  asm ("ldw	r24, 96(sp)");
-  asm ("ldw	r25, 100(sp)");
-  asm ("ldw	r26, 104(sp)");
+  asm ("ldw	et, 96(sp)");
+  asm ("ldw	bt, 100(sp)");
+  asm ("ldw	gp, 104(sp)");
   /* skip r27 because it is sp, and we did not save this on the stack */
-  asm ("ldw	r28, 112(sp)");
-  asm ("ldw	r29, 116(sp)");
-  asm ("ldw	r30, 120(sp)");
-  asm ("ldw	r31, 124(sp)");
+  asm ("ldw	fp, 112(sp)");
+  asm ("ldw	ea, 116(sp)");
+  asm ("ldw	ba, 120(sp)");
+  asm ("ldw	ra, 124(sp)");
 
   asm ("addi	sp,  sp, 128");
 

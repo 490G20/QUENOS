@@ -18,7 +18,7 @@
 KernelRelinquish:
     subi sp, sp, 4
     stw r5, 0(sp)
-    movi r5,1 #relinquish enum
+    movi r5,0 #relinquish enum, TODO: Ask if this enum should start at 1 for possibility of 0 being a common garbage value that could be misread
     trap
     ldw r5, 0(sp)
     addi sp,sp,4
@@ -27,7 +27,7 @@ KernelRelinquish:
 KernelBlock:
     subi sp, sp, 4
     stw r5, 0(sp)
-    movi r5,2 #block self enum
+    movi r5,1 #block self enum
     trap
     ldw r5, 0(sp)
     addi sp,sp,4
@@ -38,7 +38,7 @@ KernelUnblock:
     subi sp, sp, 8
     stw r5, 4(sp)
     stw r4, 0(sp)
-    movi r5,3 #unblock enum
+    movi r5,2 #unblock enum
     trap
     ldw r5, 4(sp)
     ldw r4, 0(sp)

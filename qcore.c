@@ -11,6 +11,7 @@ DESCRIPTION:	The core of the QUERK kernel. Includes the software interrupt
 
 #include "qcore.h"
 #include "queue.h"
+#include "quser.h"
 #include "nios2_ctrl_reg_macros.h"
 
 static Process *running_process;
@@ -72,7 +73,7 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
 
     //create new process
     new_process->pid = new_pid;
-    new_process->state = Ready;
+    new_process->state = READY;
     new_process->user_stack_pointer = stack_bottom + stack_size - 32;
     new_process->program_address = (unsigned int) entry_point;
 
@@ -97,16 +98,16 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
 /* functions for kernel services */
 static int QuenosCoreBlockSelf (void)
 {
-    running_process->state = Blocked;
+    running_process->state = BLOCKED;
     return 1; /* need dispatch of new process */
 }
 
 static int QuenosCoreUnblock (int other_pid)
 {
-    if (process_array[other_pid].state == Blocked)
+    if (process_array[other_pid].state == BLOCKED)
     {
         /* only unblock and add to ready queue if it was blocked */
-        process_array[other_pid].state = Ready;
+        process_array[other_pid].state = READY;
         AddToTail (&ready_queue, &process_array[other_pid]);
     }
     return 0; /* no dispatch of new process */
@@ -141,21 +142,21 @@ void interrupt_handler (void)
     // This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
     }
     else {
-            if (requestType == 1) {
+            if (requestType == RELINQUISH) {
                 printString("r\n");
                 showReadyQueue();
-                running_process->state = Ready;
+                running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
                 need_dispatch = 1;       /* need dispatch of new process */
                 showReadyQueue();
             }
-            else if (requestType == 2) {
+            else if (requestType == BLOCK_SELF) {
                 printString("blk\n");
                 showReadyQueue();
                 need_dispatch = QuenosCoreBlockSelf();
                 showReadyQueue();
             }
-            else if (requestType == 3){
+            else if (requestType == UNBLOCK){
                 int other_pid = *(casted_prev_sp+4);
                 printString("unblk\n");
                 showReadyQueue();
@@ -169,7 +170,7 @@ void interrupt_handler (void)
     if (need_dispatch)
     {
           running_process = DequeueHead(&ready_queue);
-          running_process->state = Running;
+          running_process->state = RUNNING;
           printString("CP: ");
           put_jtag(JTAG_UART_ptr,'0'+running_process->pid);
           put_jtag(JTAG_UART_ptr,'\n');
@@ -188,7 +189,7 @@ void QuenosDispatch (void)
     showReadyQueue();
 
     running_process = DequeueHead (&ready_queue);
-    running_process->state = Running;
+    running_process->state = RUNNING;
 
     showReadyQueue();
     sp_of_first_process = (unsigned int)running_process->user_stack_pointer;

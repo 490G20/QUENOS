@@ -11,7 +11,7 @@ DESCRIPTION:	Type definitions and function declarations for core of
 		Queen's University
 ******************************************************************************/
 
-typedef enum {Ready, Running, Blocked} State;
+typedef enum {READY, RUNNING, BLOCKED} State;
 
 typedef struct  _process // Formerly _pdb
 {

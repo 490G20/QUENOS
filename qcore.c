@@ -18,6 +18,7 @@ static Process *running_process;
 static Queue ready_queue;
 
 volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+volatile int * interval_timer_ptr = (int *) 0x10002000;
 
 static Process process_array[MAX_NUM_OF_PROCESSES];
 
@@ -26,6 +27,8 @@ static char kernel_stack[512];
 static int num_of_processes = 0;
 
 static int need_dispatch;
+
+typedef enum    {Relinquish, BlockSelf, Unblock, TimerDelay} Request;
 
 extern unsigned int process_stack_pointer;
 extern unsigned int ksp = (unsigned int) &kernel_stack[511];
@@ -99,6 +102,12 @@ static int QuenosCoreBlockSelf (void)
   return 1; /* need dispatch of new process */
 }
 
+static int QuenosCoreTimerBlockSelf (void)
+{
+  running_process->state = Blocked;
+  return 1; /* need dispatch of new process */
+}
+
 static int QuenosCoreUnblock (int other_pid)
 {
   if (process_array[other_pid].state == Blocked)
@@ -139,7 +148,7 @@ void interrupt_handler (void)
   // This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
   }
   else {
-  	if (requestType == 1) {
+  	if (requestType == Relinquish) {
 		printString("r\n");
 		showReadyQueue();
   		running_process->state = Ready;
@@ -147,19 +156,35 @@ void interrupt_handler (void)
   		need_dispatch = 1;       /* need dispatch of new process */
 		showReadyQueue();
   	}
-  	else if (requestType == 2) {
+  	else if (requestType == BlockSelf) {
 		printString("blk\n");
 		showReadyQueue();
   		need_dispatch = QuenosCoreBlockSelf();
 		showReadyQueue();
   	}
-  	else if (requestType == 3){
+  	else if (requestType == Unblock){
   		int other_pid = *(casted_prev_sp+4);
 		printString("unblk\n");
 		showReadyQueue();
   		need_dispatch = QuenosCoreUnblock(other_pid);
 		showReadyQueue();
   	}
+	else if (requestType == TimerDelay){
+		int other_pid = *(casted_prev_sp+4);
+		printString("timed\n");
+		showReadyQueue();
+  		need_dispatch = QuenosCoreTimerBlockSelf();
+		showReadyQueue();
+		// Initialize wait time in PCB
+		
+	}
+	else if (TIMER_INTERUPT) {
+		// Find the least remaining wait time
+		// If least is less than timerInterval 
+			//set interval_timer register to least
+		// else
+			//set interval_timer register to timerInterval
+	}
 
   }
 

@@ -8,6 +8,8 @@ DESCRIPTION:	Definition of function for initialization on startup.
 ******************************************************************************/
 
 #include "nios2_ctrl_reg_macros.h"
+extern volatile int * interval_timer_ptr;
+extern int timerInterval;
 
 void QuenosInit (void)
 {
@@ -19,6 +21,11 @@ void QuenosInit (void)
   Bit 10: Serial port
   Bit 8/9(?): JTAG port
   **/
-  NIOS2_WRITE_IENABLE(0x0701);
+	int counter = msec * 50 * 1000000; //0x190000; // 1/(50 MHz) × (0x190000) = 33 msec
+	*(interval_timer_ptr + 0x2) = (counter & 0xFFFF);
+	*(interval_timer_ptr + 0x3) = (counter >> 16) & 0xFFFF;
+	*(interval_timer_ptr + 1) = 0x7; 		// STOP = 0, START = 1, CONT = 1, ITO = 1
+
+  NIOS2_WRITE_IENABLE(0x0703);
   NIOS2_WRITE_STATUS(1);
 }

@@ -183,8 +183,14 @@ void interrupt_handler (void)
 			else if (requestType == SEND_MESSAGE){
 				printString("send\n");
 				showReadyQueue();
+                // Check memory math
+                int target_pid = *(casted_prev_sp+4);
+                unsigned int firstMessageAddress = *(casted_prev_sp+8);
 				
-				// Append message to place @ target process' PCB 
+				// Append message to place @ target process' PCB
+
+                //todo: CONTINUE FROM HERE
+                process_array[target_pid].m_queue =
 				
 				
                 running_process->state = READY;

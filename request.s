@@ -1,20 +1,18 @@
 .section .text
+
 .global KernelRelinquish
 #.type KernelRelinquish, @function
 .global KernelBlock
-#.type KernelBlockSelf, @function
-
+#.type KernelBlock, @function
 .global KernelUnblock
 #.type KernelUnblock, @function
-
-#.S extension required?
+.global KernelSendMessage
+.global KernelReadMessage
 
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
-# We enter the kernel using trap, and expect the ?exception handler? to automatically save everything onto the stack for us
+# We enter the kernel using trap, and expect the ?xception handler to automatically save everything onto the stack for us
 # and restore it after
 
-#Could identical file name create issues?
-#TODO: Determine how to link and if qrequest.h
 KernelRelinquish:
     subi sp, sp, 4
     stw r5, 0(sp)
@@ -46,14 +44,24 @@ KernelUnblock:
 	ret
 	
 # Expect target pid to message in r4, and target address in r5 
-KernelSendMessage
+KernelSendMessage:
 	subi sp, sp 12
 	stw r6, 8(sp)
 	stw r5, 4(sp)
     stw r4, 0(sp)
+    movi r5, 3 # send message enum
 	trap
 	ldw r6, 8(sp)
     ldw r5, 4(sp)
     ldw r4, 0(sp)
     addi sp,sp,12
+	ret
+
+KernelReadMessage:
+    subi sp, sp, 4
+    stw r5, 0(sp)
+    movi r5, 4 # read message enum
+    trap
+    ldw r5, 0(sp)
+    addi sp,sp,4
 	ret

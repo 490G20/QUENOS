@@ -32,17 +32,20 @@ void    QuenosUnblock (int other_pid) {
 target_pid in r4, message address into r5
 */
 void QuenosSendMessage(int target_pid, unsigned int messageAddress){//Message *m){
-	// Shove message (address?) somewhere kernel can get at it
+
+    // Shove message (address?) somewhere kernel can get at it
+
+
 
 	KernelSendMessage();
 	
-	if (process_array[target_pid].state == BLOCKED){
-		/* only unblock and add to ready queue if it was blocked */
-        process_array[target_pid].state = READY;
-        AddToTail (&ready_queue, &process_array[target_pid]);
-    }
-
-	KernelRelinquish (); //relinquish elsewhere?
+//	if (process_array[target_pid].state == BLOCKED){
+//		/* only unblock and add to ready queue if it was blocked */
+//        process_array[target_pid].state = READY;
+//        AddToTail (&ready_queue, &process_array[target_pid]);
+//    }
+//
+//	KernelRelinquish (); //relinquish elsewhere?
 }
 
 void QuenosReceiveMessage(){
@@ -54,7 +57,9 @@ static	void    Process1 (void)
         for (;;)
         {
                 printString("a\n");
-                KernelBlock();
+                //KernelBlock();
+                KernelReadMessage();
+
         }
 		
 		

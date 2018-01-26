@@ -76,6 +76,7 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
     new_process->state = READY;
     new_process->user_stack_pointer = stack_bottom + stack_size - 32;
     new_process->program_address = (unsigned int) entry_point;
+    new_process->m_queue = 0; //
 
     // Set ea value in process stack
     unsigned int* p = (unsigned int*) new_process->user_stack_pointer + 29;
@@ -193,14 +194,29 @@ void interrupt_handler (void)
                 showReadyQueue();
 			}
 			else if (requestType == READ_MESSAGE){
-				printString("read\n");
+				printString("readin\n");
 				showReadyQueue();
 				
-				# Get message chain link PCB
-				
-                running_process->state = READY;
-                AddToTail(&ready_queue, running_process);
-				
+				// Get message chain link PCB
+				if (running_process->message != 0){
+
+                    Message current_message;
+                    current_message = running_process->message;
+
+                    while (current_message != 0){
+                        printString(running_process->message->data);
+                        current_message.prev = 0;
+                        // Deallocate this?
+                        current_message = current_message.data;
+
+                        // Is C smart enough to free the previous message now that I don't need it anymore?
+                        free(current_message.prev);
+                    }
+
+                    running_process->state = READY;
+                    AddToTail(&ready_queue, running_process);
+                }
+
                 need_dispatch = 1;       /* need dispatch of new process */
                 showReadyQueue();
 			}

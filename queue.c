@@ -39,3 +39,33 @@ Process     *DequeueHead (Queue *queue)
 
         return ret;
 }
+
+// C doesn't have strong OOP support so this code is pretty heavily rehashed from the original queue for processes
+
+void    AddMessageToTail (MessageQueue *queue, Message *message)
+{
+        message->prev = message->tail;
+        message->next = 0;
+        if (queue->head != 0)
+                queue->tail->next = message;
+        else
+                queue->head = message;
+        queue->tail = message;
+}
+
+Message     *DequeueMessageHead (DequeueMessageHead *queue)
+{
+        Message     *ret;
+
+        ret = queue->head;
+        if (ret == 0)
+                return ret;
+
+        queue->head = ret->next;
+        if (queue->head == 0)
+                queue->tail = 0;
+        else
+                queue->head->prev = 0;
+
+        return ret;
+}

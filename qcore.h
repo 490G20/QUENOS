@@ -13,6 +13,12 @@ DESCRIPTION:	Type definitions and function declarations for core of
 
 typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE} State;
 
+typedef struct _message {
+	struct _message *prev;
+	struct _message *next;
+	char* data; // Revise into hardcoded, and do dynamic mem allocation later if necessary for proof of concept
+} Message;
+
 typedef struct  _process // Formerly _pdb
 {
         struct  _process    *prev;
@@ -22,13 +28,9 @@ typedef struct  _process // Formerly _pdb
 		// TODO: Best to name user stack pointer or stack pointer? formerly just SP
         void    *user_stack_pointer;		/* saves user stack pointer when not running */
         unsigned int program_address;
-} Process; // Formerly pdb
 
-typedef struct _message {
-	struct _message *prev;
-	struct _message *next;
-	char* data; // Revise into hardcoded, and do dynamic mem allocation later if necessary for proof of concept
-} Message;
+		struct _messageQueue *m_queue;
+} Process; // Formerly pdb
 
 #define MAX_NUM_OF_PROCESSES 16
 

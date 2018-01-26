@@ -19,4 +19,6 @@ extern	void    QuenosUnblock (int other_pid);
 extern void KernelRelinquish(void);
 extern void KernelBlock(void);
 extern void KernelUnblock(void);
+extern void KernelSendMessage(void);
+extern void KernelReadMessage(void);
 #endif /* _QUSER_H_ */

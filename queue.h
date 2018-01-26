@@ -20,5 +20,14 @@ typedef struct  _queue
 extern  void    AddToTail (Queue *queue, Process *process);
 extern  Process     *DequeueHead (Queue *queue);
 
+// MessageQueue is essentially identical to the (process) queue, except it is for Message objects (structs)
+typedef struct _messageQueue { // watch the capital
+    Message *head;
+    Message *tail;
+} MessageQueue;
+
+extern void AddMessageToTail(MessageQueue *q, Message *m);
+extern Message *DequeueMessageHead(DequeueMessageHead *queue);
+
 #endif /* _QUEUE_H_ */
 

@@ -107,10 +107,10 @@ static int QuenosCoreBlockSelf (void)
 static void QuenosCoreSendMessage(int target_pid, Message *m){	
 	// Shove message (address?) somewhere kernel can get at it
 
-	if (process_array[other_pid].state == WAITING_FOR_MESSAGE){
+	if (process_array[target_pid].state == WAITING_FOR_MESSAGE){
 		/* only unblock and add to ready queue if it was blocked */
-        process_array[other_pid].state = READY;
-        AddToTail (&ready_queue, &process_array[other_pid]);
+        process_array[target_pid].state = READY;
+        AddToTail (&ready_queue, &process_array[target_pid]);
     }
 		
 
@@ -196,23 +196,26 @@ void interrupt_handler (void)
 			else if (requestType == READ_MESSAGE){
 				printString("readin\n");
 				showReadyQueue();
-				
-				// Get message chain link PCB
-				if (running_process->message != 0){
+                Message *current_message;
+                current_message = DequeueMessageHead(running_process->m_queue);
 
-                    Message current_message;
-                    current_message = running_process->message;
+                if (current_message != 0){
 
                     while (current_message != 0){
-                        printString(running_process->message->data);
-                        current_message.prev = 0;
-                        // Deallocate this?
-                        current_message = current_message.data;
+                        printString(current_message->data);
 
-                        // Is C smart enough to free the previous message now that I don't need it anymore?
-                        free(current_message.prev);
+                        // dealloc prev
+                        free(current_message->prev);
+                        current_message->prev = 0;
+
+                        current_message = current_message->next;
+
+                        // dealloc message we just read
+                        free(current_message->prev);
+                        current_message->prev = 0;
                     }
 
+                    // CLion tells me this code is unreachable
                     running_process->state = READY;
                     AddToTail(&ready_queue, running_process);
                 }

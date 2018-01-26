@@ -45,7 +45,7 @@ KernelUnblock:
 	
 # Expect target pid to message in r4, and target address in r5 
 KernelSendMessage:
-	subi sp, sp 12
+	subi sp, sp, 12
 	stw r6, 8(sp)
 	stw r5, 4(sp)
     stw r4, 0(sp)

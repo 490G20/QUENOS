@@ -44,7 +44,7 @@ Process     *DequeueHead (Queue *queue)
 
 void    AddMessageToTail (MessageQueue *queue, Message *message)
 {
-        message->prev = message->tail;
+        message->prev = queue->tail;
         message->next = 0;
         if (queue->head != 0)
                 queue->tail->next = message;
@@ -53,7 +53,7 @@ void    AddMessageToTail (MessageQueue *queue, Message *message)
         queue->tail = message;
 }
 
-Message     *DequeueMessageHead (DequeueMessageHead *queue)
+Message     *DequeueMessageHead (MessageQueue *queue)
 {
         Message     *ret;
 

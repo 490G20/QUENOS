@@ -185,14 +185,15 @@ void interrupt_handler (void)
 				showReadyQueue();
                 // Check memory math
                 int target_pid = *(casted_prev_sp+4);
-                unsigned int firstMessageAddress = *(casted_prev_sp+8);
+                unsigned int messageToSend = *(casted_prev_sp+5);
 				
 				// Append message to place @ target process' PCB
 
-                //todo: CONTINUE FROM HERE
-                process_array[target_pid].m_queue =
-				
-				
+                MessageQueue *mq; // pointer?
+
+                mq = process_array[target_pid].m_queue;
+                AddMessageToTail(&mq, messageToSend);
+
                 running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
 				
@@ -202,35 +203,29 @@ void interrupt_handler (void)
 			else if (requestType == READ_MESSAGE){
 				printString("readin\n");
 				showReadyQueue();
+                need_dispatch = 0;
                 Message *current_message;
                 current_message = DequeueMessageHead(running_process->m_queue);
+                unsigned int address = &current_message;
 
                 if (current_message != 0){
-
-                    while (current_message != 0){
-                        printString(current_message->data);
-
-                        // dealloc prev
-                        free(current_message->prev);
-                        current_message->prev = 0;
-
-                        current_message = current_message->next;
-
-                        // dealloc message we just read
-                        free(current_message->prev);
-                        current_message->prev = 0;
-                    }
-
-                    // CLion tells me this code is unreachable
                     running_process->state = READY;
                     AddToTail(&ready_queue, running_process);
+                    // Store address of current message into where the expected saved value of r2 (least sig) and r3 would be on the stack here
+                    *(casted_prev_sp+2) = address & 0x0000FFFF; // Least significant bits
+                    *(casted_prev_sp+3) = address & 0xFFFF0000; // Most significant bits
+                }
+                else {
+                    // Do not hog CPU, let another process run and recheck on next run
+                    need_dispatch = 1;
+                    // Overwrite r2 and r3 values to load with 0
+                    *(casted_prev_sp+2) = 0;
+                    *(casted_prev_sp+3) =0;
                 }
 
-                need_dispatch = 1;       /* need dispatch of new process */
                 showReadyQueue();
 			}
-			
-
+        //todo: CONTINUE FROM HERE
     }
 
     /* Fifth task: decide if dispatching of new process is needed. */

@@ -31,12 +31,7 @@ void    QuenosUnblock (int other_pid) {
 /**
 target_pid in r4, message address into r5
 */
-void QuenosSendMessage(int target_pid, unsigned int messageAddress){//Message *m){
-
-    // Shove message (address?) somewhere kernel can get at it
-
-
-
+void QuenosSendMessage(int target_pid, unsigned int messageAddress){
 	KernelSendMessage();
 	
 //	if (process_array[target_pid].state == BLOCKED){
@@ -48,31 +43,58 @@ void QuenosSendMessage(int target_pid, unsigned int messageAddress){//Message *m
 //	KernelRelinquish (); //relinquish elsewhere?
 }
 
-void QuenosReceiveMessage(){
-
+unsigned int QuenosReceiveMessage(){
+    return KernelReadMessage();
 }
 
 static	void    Process1 (void)
 {	
         for (;;)
         {
-                printString("a\n");
-                //KernelBlock();
-                KernelReadMessage();
+            Message *m;
+            printString("a\n");
+            //KernelBlock();
+            m = QuenosReceiveMessage();
+            if (m != 0){
+                printString(m->data);
+            }
+            else {
+                printString("no message");
+            }
 
+            KernelRelinquish();
         }
-		
+
+//    while (current_message != 0){
+//        printString(current_message->data);
+//
+//        // dealloc prev
+//        free(current_message->prev);
+//        current_message->prev = 0;
+//
+//        current_message = current_message->next;
+//
+//        // dealloc message we just read
+//        free(current_message->prev);
+//        current_message->prev = 0;
+//    }
+//
 		
 }
 
 static	void    Process2 (void)
 {
-        for (;;)
-        {
-                printString("b\n");
-				QuenosUnblock (1);
-				KernelRelinquish ();
-        }
+    Message *m;
+    m->data = "LET ME REST";
+    m->next = 0;
+    m->prev = 0;
+    for (;;)
+    {
+        printString("b\n");
+        //QuenosUnblock (1);
+        QuenosSendMessage(1, &m);
+        KernelRelinquish();
+    }
 }
 
 void UserProcesses (void)

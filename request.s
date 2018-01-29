@@ -62,6 +62,8 @@ KernelReadMessage:
     stw r5, 0(sp)
     movi r5, 4 # read message enum
     trap
+    # We will expect (and accept) that the interrupt handler method called by exception_handler.c will overwrite the values to load
+    # into r2 and r3 to contain the address of the message
     ldw r5, 0(sp)
     addi sp,sp,4
 	ret

@@ -189,7 +189,7 @@ void interrupt_handler (void)
 				
 				// Append message to place @ target process' PCB
 
-                MessageQueue *mq; // pointer?
+                MessageQueue mq; // pointer?
 
                 mq = process_array[target_pid].m_queue;
                 AddMessageToTail(&mq, messageToSend);

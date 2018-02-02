@@ -26,7 +26,7 @@ typedef struct _messageQueue { // watch the capital?
     Message *tail;
 } MessageQueue;
 
-extern void AddMessageToTail(MessageQueue *q, Message *m);
+extern void AddMessageToTail(MessageQueue *queue, Message *message);
 extern Message *DequeueMessageHead (MessageQueue *queue);
 
 #endif /* _QUEUE_H_ */

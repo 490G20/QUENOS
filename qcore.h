@@ -29,7 +29,7 @@ typedef struct  _process // Formerly _pdb
         void    *user_stack_pointer;		/* saves user stack pointer when not running */
         unsigned int program_address;
 
-		struct _messageQueue *m_queue;
+		struct _messageQueue m_queue;
 } Process; // Formerly pdb
 
 #define MAX_NUM_OF_PROCESSES 16

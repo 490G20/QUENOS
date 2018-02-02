@@ -92,7 +92,8 @@ static	void    Process2 (void)
     {
         printString("b\n");
         //QuenosUnblock (1);
-        QuenosSendMessage(1, &m);
+        unsigned int addressPlease = &m;
+        QuenosSendMessage(1, addressPlease);
         KernelRelinquish();
     }
 }

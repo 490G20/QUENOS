@@ -189,9 +189,8 @@ void interrupt_handler (void)
 				
 				// Append message to place @ target process' PCB
 
-                MessageQueue mq; // pointer?
-
-                mq = process_array[target_pid].m_queue;
+                MessageQueue mq;
+                mq = *(process_array[target_pid].m_queue);
                 AddMessageToTail(&mq, messageToSend);
 
                 running_process->state = READY;
@@ -204,7 +203,7 @@ void interrupt_handler (void)
 				printString("readin\n");
 				showReadyQueue();
                 need_dispatch = 0;
-                Message *current_message;
+                Message* current_message;
                 current_message = DequeueMessageHead(running_process->m_queue);
                 unsigned int address = &current_message;
 

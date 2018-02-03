@@ -44,28 +44,28 @@ Process     *DequeueHead (Queue *queue)
 
 void    AddMessageToTail (MessageQueue *queue, Message *message)
 {
-        message->prev = queue->tail;
-        message->next = 0;
-        if (queue->head != 0)
-                queue->tail->next = message;
-        else
-                queue->head = message;
-        queue->tail = message;
+    message->prev = queue->tail;
+    message->next = 0;
+    if (queue->head != 0)
+        queue->tail->next = message;
+    else
+        queue->head = message;
+    queue->tail = message;
 }
 
 Message     *DequeueMessageHead (MessageQueue *queue)
 {
-        Message     *ret;
+    Message     *ret;
 
-        ret = queue->head;
-        if (ret == 0)
-                return ret;
-
-        queue->head = ret->next;
-        if (queue->head == 0)
-                queue->tail = 0;
-        else
-                queue->head->prev = 0;
-
+    ret = queue->head;
+    if (ret == 0)
         return ret;
+
+    queue->head = ret->next;
+    if (queue->head == 0)
+        queue->tail = 0;
+    else
+        queue->head->prev = 0;
+
+    return ret;
 }

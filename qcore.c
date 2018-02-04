@@ -161,7 +161,7 @@ void interrupt_handler (void)
     else {
             if (requestType == RELINQUISH) {
                 printString("r\n");
-                showReadyQueue();
+                showReadyQueue(); // Versioning bug: ready queue used to be garbage when dealing with null process
                 running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
                 need_dispatch = 1;       /* need dispatch of new process */

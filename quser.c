@@ -17,7 +17,7 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 #include "qcore.h"
 
 #define USER_STACK_SIZE 256
-
+static  char    P0stack[USER_STACK_SIZE];
 static  char    P1stack[USER_STACK_SIZE];
 static  char    P2stack[USER_STACK_SIZE];
 
@@ -26,6 +26,12 @@ static  char    P2stack[USER_STACK_SIZE];
  */
 void    QuenosUnblock (int other_pid) {
     KernelUnblock();
+}
+//yolo swag
+static void Process0(void){
+    for (;;){
+        KernelRelinquish();
+    }
 }
 
 /**
@@ -100,6 +106,7 @@ static	void    Process2 (void)
 
 void UserProcesses (void)
 {
+    QuenosNewProcess(Process0, P0stack, USER_STACK_SIZE );
     QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
 }

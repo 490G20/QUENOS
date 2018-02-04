@@ -9,6 +9,7 @@
 .global KernelSendMessage
 .global KernelReadMessage
 
+
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
 # We enter the kernel using trap, and expect the ?xception handler to automatically save everything onto the stack for us
 # and restore it after

@@ -32,20 +32,45 @@ void NullProcess (void)
 /* relinquish then check for jtag input. Can have commands like display processes and state
  * (save states in kernel and then read from those to display) and commands for sending a message */
 
+char get_char( void )
+{
+    volatile int * JTAG_UART_ptr = (int *) 0x10001000; // JTAG UART address
+    int data;
+    data = *(JTAG_UART_ptr); // read the JTAG_UART data register
+    if (data & 0x00008000) // check RVALID to see if there is new data
+        return ((char) data & 0xFF);
+    else
+        return '\0';
+}
+
+void append(char* s, char c) {
+        int len = strlen(s);
+        s[len] = c;
+        s[len+1] = '\0';
+}
+
 void TerminalProcess (void)
 {
     char input[30];
     for (;;) {
-        scanf("%s", input);
-        printf("%s\n", input);
+        char i;
+        i = get_char();
 
-        if (strcmp(input, "processA") == 0) {
-            QuenosNewProcess(ProcessA, PAstack, PROCESS_STACK_SIZE);
-            KernelRelinquish();
-        } else if (strcmp(input, "processB") == 0) {
-            QuenosNewProcess(ProcessB, PBstack, PROCESS_STACK_SIZE);
-            KernelRelinquish();
+        while (i != '\0') {
+            if (i == '\r') {
+                if (input == "ab") {
+                    printString("hi");
+                }
+
+                memset(input, 0, sizeof(input));
+                break;
+            }
+
+            append(input, i);
+            i = get_char();
         }
+
+        KernelRelinquish();
     }
 }
 

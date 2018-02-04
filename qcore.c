@@ -40,6 +40,17 @@ void put_jtag(volatile int* JTAG_UART_ptr, char c)
     *(JTAG_UART_ptr) = c;
 }
 
+char get_char(void)
+{
+    volatile int * JTAG_UART_ptr = (int *) 0xFF201000; // JTAG UART address
+    int data;
+    data = *(JTAG_UART_ptr); // read the JTAG_UART data register
+    if (data & 0x00008000) // check RVALID to see if there is new data
+        return ((char) data & 0xFF);
+    else
+        return ("\0");
+}
+
 void printString(char *text_string)
 {
     int i =0;
@@ -51,7 +62,7 @@ void printString(char *text_string)
 /**
  *  Prints out the ready queue, used for debugging
  */
-void showReadyQueue (void) {
+void showReadyQueue(void) {
     Process * p = ready_queue.head;
     printString("queue: ");
     while (p!=0){
@@ -64,7 +75,7 @@ void showReadyQueue (void) {
 
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
-void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack_size)
+void QuenosNewProcess(void (*entry_point) (void), char *stack_bottom, int stack_size)
 {
     //stackframe pointer deleted but not replaced?
     int new_pid = num_of_processes++;	/* assign new pid */
@@ -95,13 +106,13 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
 }
 
 /* functions for kernel services */
-static int QuenosCoreBlockSelf (void)
+static int QuenosCoreBlockSelf(void)
 {
     running_process->state = Blocked;
     return 1; /* need dispatch of new process */
 }
 
-static int QuenosCoreUnblock (int other_pid)
+static int QuenosCoreUnblock(int other_pid)
 {
     if (process_array[other_pid].state == Blocked)
     {
@@ -110,6 +121,24 @@ static int QuenosCoreUnblock (int other_pid)
         AddToTail (&ready_queue, &process_array[other_pid]);
     }
     return 0; /* no dispatch of new process */
+}
+
+void pushbutton_ISR(void)
+{
+    volatile int *KEY_ptr = (int *) 0x10000050;
+    int press;
+
+    press = *(KEY_ptr + 3); // read the pushbutton interrupt register
+    *(KEY_ptr + 3) = 0; // clear the interrupt
+
+    /* if (press & 0x2) // KEY1 */
+    /*     /1* key_pressed = KEY1; *1/ */
+    /* else if (press & 0x4) // KEY2 */
+    /*     /1* key_pressed = KEY2; *1/ */
+    /* else // press & 0x8, which is KEY3 */
+    /*     /1* pattern = *(slider_switch_ptr); // read the SW slider switch values; store in pattern *1/ */
+
+    return;
 }
 
 /* software interrupt routines */
@@ -122,7 +151,7 @@ static int QuenosCoreUnblock (int other_pid)
 
 // This is called directly called by the DE2 hardware when a hardware interrupt occurs,
 // It is also called indirectly by the_exception(), the software interrupt
-void interrupt_handler (void)
+void interrupt_handler(void)
 {
     printString("i\n");
     // First task: Update process control block for running process with stackpointer
@@ -137,8 +166,8 @@ void interrupt_handler (void)
     /* They are available on the user process stack. */
     ipending = NIOS2_READ_IPENDING(); // Read the interrupt
 
-    if (ipending) {
-    // This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
+    if (ipending & 0x2) { // pushbuttons are interrupt level 1
+        pushbutton_ISR();
     }
     else {
             if (requestType == 1) {

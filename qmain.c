@@ -30,11 +30,10 @@ int main ()
   /* initialize interrupt vectors and any other things... */
   QuenosInit ();
   /* create null process and add to ready queue */
-  QuenosNewProcess (NullProcess, NullProcessStack,
-                   NULL_PROCESS_STACK_SIZE);
 
   /* create user processes and add to ready queue */
   UserProcesses ();
+  //QuenosNewProcess (NullProcess, NullProcessStack, NULL_PROCESS_STACK_SIZE);
 
   /* start up the first process (we never return here) */
   QuenosDispatch ();

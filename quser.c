@@ -27,7 +27,7 @@ static  char    P2stack[USER_STACK_SIZE];
 void    QuenosUnblock (int other_pid) {
     KernelUnblock();
 }
-//yolo swag
+
 static void Process0(void){
     for (;;){
         KernelRelinquish();

@@ -18,7 +18,7 @@ static Process *running_process;
 
 static Queue ready_queue;
 
-volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+extern volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
 
 static Process process_array[MAX_NUM_OF_PROCESSES];
 
@@ -52,7 +52,7 @@ void printString(char *text_string)
 /**
  *  Prints out the ready queue, used for debugging
  */
-void showReadyQueue (void) {
+void ShowReadyQueue (void) {
     Process * p = ready_queue.head;
     printString("queue: ");
     while (p!=0){
@@ -87,12 +87,12 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
     asm ("ldw r13, 0(r12)");
     asm ("stw gp, 104(r13)");
 
-    printString("NP \n");
-    showReadyQueue();
+    /* printString("NP \n"); */
+    /* showReadyQueue(); */
 
     AddToTail (&ready_queue, new_process);
 
-    showReadyQueue();
+    /* showReadyQueue(); */
 }
 
 /* functions for kernel services */
@@ -125,7 +125,7 @@ static int QuenosCoreUnblock (int other_pid)
 // It is also called indirectly by the_exception(), the software interrupt
 void interrupt_handler (void)
 {
-    printString("i\n");
+    /* printString("i\n"); */
     // First task: Update process control block for running process with stackpointer
     running_process->user_stack_pointer = (void*) process_stack_pointer;
     unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
@@ -143,25 +143,25 @@ void interrupt_handler (void)
     }
     else {
             if (requestType == RELINQUISH) {
-                printString("r\n");
-                showReadyQueue();
+                /* printString("r\n"); */
+                /* showReadyQueue(); */
                 running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
                 need_dispatch = 1;       /* need dispatch of new process */
-                showReadyQueue();
+                /* showReadyQueue(); */
             }
             else if (requestType == BLOCK_SELF) {
-                printString("blk\n");
-                showReadyQueue();
+                /* printString("blk\n"); */
+                /* showReadyQueue(); */
                 need_dispatch = QuenosCoreBlockSelf();
-                showReadyQueue();
+                /* showReadyQueue(); */
             }
             else if (requestType == UNBLOCK){
                 int other_pid = *(casted_prev_sp+4);
-                printString("unblk\n");
-                showReadyQueue();
+                /* printString("unblk\n"); */
+                /* showReadyQueue(); */
                 need_dispatch = QuenosCoreUnblock(other_pid);
-                showReadyQueue();
+                /* showReadyQueue(); */
             }
 
     }
@@ -171,9 +171,9 @@ void interrupt_handler (void)
     {
           running_process = DequeueHead(&ready_queue);
           running_process->state = RUNNING;
-          printString("CP: ");
-          put_jtag(JTAG_UART_ptr,'0'+running_process->pid);
-          put_jtag(JTAG_UART_ptr,'\n');
+          /* printString("CP: "); */
+          /* put_jtag(JTAG_UART_ptr,'0'+running_process->pid); */
+          /* put_jtag(JTAG_UART_ptr,'\n'); */
     }
 
     process_stack_pointer = (unsigned int) running_process->user_stack_pointer; // This will need to be checked in the debugger
@@ -185,13 +185,13 @@ void interrupt_handler (void)
    to generate a return-from-interrupt instruction. */
 void QuenosDispatch (void)
 {
-    printString("QD\n");
-    showReadyQueue();
+    /* printString("QD\n"); */
+    /* showReadyQueue(); */
 
     running_process = DequeueHead (&ready_queue);
     running_process->state = RUNNING;
 
-    showReadyQueue();
+    /* showReadyQueue(); */
     sp_of_first_process = (unsigned int)running_process->user_stack_pointer;
 
     asm("movia r12, sp_of_first_process");

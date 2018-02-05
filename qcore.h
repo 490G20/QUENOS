@@ -26,12 +26,13 @@ typedef struct  _process // Formerly _pdb
 
 #define MAX_NUM_OF_PROCESSES 16
 
-extern  void    QuenosNewProcess (void (*entry_point) (void),
+extern void QuenosNewProcess (void (*entry_point) (void),
 				 char *stack_bottom, int stack_size);
+extern void ShowReadyQueue (void);
 
-extern  void    QuenosSWIHandler (void);
+extern void QuenosSWIHandler (void);
 
-extern  void    QuenosDispatch (void);
+extern void QuenosDispatch (void);
 extern unsigned int process_stack_pointer;
 extern unsigned int ksp;
 

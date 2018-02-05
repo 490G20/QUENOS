@@ -32,7 +32,7 @@ static	void    Process1 (void)
 {
         for (;;)
         {
-                printString("a\n");
+                /* printString("a\n"); */
                 KernelBlock();
         }
 }
@@ -41,9 +41,9 @@ static	void    Process2 (void)
 {
         for (;;)
         {
-                printString("b\n");
-				QuenosUnblock (1);
-				KernelRelinquish ();
+                /* printString("b\n"); */
+                QuenosUnblock (1);
+                KernelRelinquish ();
         }
 }
 

@@ -195,7 +195,11 @@ void interrupt_handler (void)
 
                 running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
-				
+
+                if (process_array[target_pid].state == WAITING_FOR_MESSAGE){
+                    process_array[target_pid].state = READY;
+                }
+
                 need_dispatch = 1;       /*relinquish need dispatch of new process */
                 showReadyQueue();
 			}
@@ -203,8 +207,8 @@ void interrupt_handler (void)
 				printString("readin\n");
 				showReadyQueue();
                 need_dispatch = 0;
-                Message* current_message;
-                current_message = DequeueMessageHead(running_process->m_queue);
+                Message *current_message;
+                current_message = DequeueMessageHead(&(running_process->m_queue));
                 unsigned int address = &current_message;
 
                 if (current_message != 0){
@@ -215,6 +219,7 @@ void interrupt_handler (void)
                     *(casted_prev_sp+3) = address & 0xFFFF0000; // Most significant bits
                 }
                 else {
+                    running_process->state = WAITING_FOR_MESSAGE;
                     // Do not hog CPU, let another process run and recheck on next run
                     need_dispatch = 1;
                     // Overwrite r2 and r3 values to load with 0
@@ -224,7 +229,6 @@ void interrupt_handler (void)
 
                 showReadyQueue();
 			}
-        //todo: CONTINUE FROM HERE
     }
 
     /* Fifth task: decide if dispatching of new process is needed. */

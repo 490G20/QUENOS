@@ -21,11 +21,12 @@ static  char    P0stack[USER_STACK_SIZE];
 static  char    P1stack[USER_STACK_SIZE];
 static  char    P2stack[USER_STACK_SIZE];
 
+volatile int* JTAG_UART_ptr; // JTAG UART address
 /**
  * Application binary interface documentation says other_pid will be passed into r4
  */
 void    QuenosUnblock (int other_pid) {
-    KernelUnblock();
+    KernelUnblock(other_pid);
 }
 //yolo swag
 static void Process0(void){
@@ -37,9 +38,8 @@ static void Process0(void){
 /**
 target_pid in r4, message address into r5
 */
-void QuenosSendMessage(int target_pid, unsigned int messageAddress){
-	KernelSendMessage();
-	
+void QuenosSendMessage(int target_pid, Message *messageAddress){
+	KernelSendMessage(target_pid, messageAddress);
 //	if (process_array[target_pid].state == BLOCKED){
 //		/* only unblock and add to ready queue if it was blocked */
 //        process_array[target_pid].state = READY;
@@ -54,15 +54,15 @@ unsigned int QuenosReceiveMessage(){
 }
 
 static	void    Process1 (void)
-{	
+{
         for (;;)
         {
-            Message *m;
+            char m;
             printString("a\n");
             //KernelBlock();
             m = QuenosReceiveMessage();
             if (m != 0){
-                printString(m->data);
+                put_jtag(JTAG_UART_ptr, m);
             }
             else {
                 printString("no message");
@@ -70,36 +70,24 @@ static	void    Process1 (void)
 
             KernelRelinquish();
         }
-
-//    while (current_message != 0){
-//        printString(current_message->data);
-//
-//        // dealloc prev
-//        free(current_message->prev);
-//        current_message->prev = 0;
-//
-//        current_message = current_message->next;
-//
-//        // dealloc message we just read
-//        free(current_message->prev);
-//        current_message->prev = 0;
-//    }
-//
-		
 }
 
 static	void    Process2 (void)
 {
-    Message *m;
-    m->data = "LET ME REST";
-    m->next = 0;
-    m->prev = 0;
+    Message m;
+    m.data[0] = 'h'; // char array
+    m.data[1] = 'e'; // char array
+    m.data[2] = 'l'; // char array
+    m.data[3] = 'l'; // char array
+    m.data[4] = 'o'; // char array
+    m.data[5] = '\0'; // char array
+    m.next = 0;
+    m.prev = 0;
     for (;;)
     {
         printString("b\n");
         //QuenosUnblock (1);
-        unsigned int addressPlease = &m;
-        QuenosSendMessage(1, addressPlease);
+        QuenosSendMessage(1, &m);
         KernelRelinquish();
     }
 }

@@ -16,7 +16,7 @@ typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE} State;
 typedef struct _message {
 	struct _message *prev;
 	struct _message *next;
-	char* data; // Revise into hardcoded, and do dynamic mem allocation later if necessary for proof of concept
+	unsigned char data[32]; // Revise into hardcoded, and do dynamic mem allocation later if necessary for proof of concept
 } Message;
 
 // MessageQueue is essentially identical to the (process) queue, except it is for Message objects (structs)
@@ -30,15 +30,15 @@ extern Message *DequeueMessageHead (MessageQueue *queue);
 
 typedef struct  _process // Formerly _pdb
 {
-		unsigned int program_address;
-		struct  _process    *prev;
+        unsigned int program_address;
+        struct  _process    *prev;
         struct  _process    *next;
         int     pid; // process id
         State   state;
 		// TODO: Best to name user stack pointer or stack pointer? formerly just SP
         void    *user_stack_pointer;		/* saves user stack pointer when not running */
 
-		struct _messageQueue *m_queue; // Move elsewhere if debugging with hairy pointer math
+        struct _messageQueue m_queue; // Move elsewhere if debugging with hairy pointer math
 } Process; // Formerly pdb
 
 #define MAX_NUM_OF_PROCESSES 16

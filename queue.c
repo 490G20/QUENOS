@@ -46,10 +46,15 @@ void    AddMessageToTail (MessageQueue *queue, Message *message)
 {
     message->prev = queue->tail;
     message->next = 0;
-    if (queue->head != 0)
+    if (queue->head != 0) {
+      printf("%d", queue->head);
         queue->tail->next = message;
+    }
     else
+    {
+      printString("o\n");
         queue->head = message;
+    }
     queue->tail = message;
 }
 

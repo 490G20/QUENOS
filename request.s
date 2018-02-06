@@ -43,20 +43,21 @@ KernelUnblock:
     ldw r4, 0(sp)
     addi sp,sp,8
 	ret
-	
-# Expect target pid to message in r4, and target address in r5 
+
+# Expect target pid to message in r4, and target address in r5
 KernelSendMessage:
-	subi sp, sp, 12
-	stw r6, 8(sp)
-	stw r5, 4(sp)
+    subi sp, sp, 12
+    stw r6, 8(sp)
+    stw r5, 4(sp)
     stw r4, 0(sp)
+    mov r5, r6
     movi r5, 3 # send message enum
-	trap
-	ldw r6, 8(sp)
+    trap
+    ldw r6, 8(sp)
     ldw r5, 4(sp)
     ldw r4, 0(sp)
     addi sp,sp,12
-	ret
+    ret
 
 KernelReadMessage:
     subi sp, sp, 4
@@ -64,7 +65,7 @@ KernelReadMessage:
     movi r5, 4 # read message enum
     trap
     # We will expect (and accept) that the interrupt handler method called by exception_handler.c will overwrite the values to load
-    # into r2 and r3 to contain the address of the message
+    # into r2
     ldw r5, 0(sp)
     addi sp,sp,4
-	ret
+    ret

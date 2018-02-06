@@ -2,12 +2,9 @@
 .global KernelRelinquish
 #.type KernelRelinquish, @function
 .global KernelBlock
-#.type KernelBlockSelf, @function
-
+#.type KernelBlock, @function
 .global KernelUnblock
 #.type KernelUnblock, @function
-
-#.S extension required?
 
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
 # We enter the kernel using trap, and expect the ?exception handler? to automatically save everything onto the stack for us

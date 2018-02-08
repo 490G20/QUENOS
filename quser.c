@@ -40,13 +40,6 @@ target_pid in r4, message address into r5
 */
 void QuenosSendMessage(int target_pid, Message *messageAddress){
 	KernelSendMessage(target_pid, messageAddress);
-//	if (process_array[target_pid].state == BLOCKED){
-//		/* only unblock and add to ready queue if it was blocked */
-//        process_array[target_pid].state = READY;
-//        AddToTail (&ready_queue, &process_array[target_pid]);
-//    }
-//
-//	KernelRelinquish (); //relinquish elsewhere?
 }
 
 unsigned int QuenosReceiveMessage(){
@@ -57,12 +50,15 @@ static	void    Process1 (void)
 {
         for (;;)
         {
-            char m;
+            Message *m;
             printString("a\n");
-            //KernelBlock();
             m = QuenosReceiveMessage();
             if (m != 0){
-                put_jtag(JTAG_UART_ptr, m);
+                int i;
+                for (i=0; i < strlen(m->data); i++) {
+                    put_jtag(JTAG_UART_ptr, m->data[i]);
+                }
+                printString("\n");
             }
             else {
                 printString("no message");
@@ -86,7 +82,6 @@ static	void    Process2 (void)
     for (;;)
     {
         printString("b\n");
-        //QuenosUnblock (1);
         QuenosSendMessage(1, &m);
         KernelRelinquish();
     }

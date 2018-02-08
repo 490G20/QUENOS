@@ -1,6 +1,8 @@
 #ifndef _QUSER_H_
 #define _QUSER_H_
 
+#include "qcore.h"
+
 /******************************************************************************
 NAME:		quser.h
 DESCRIPTION:	Declarations for user-supplied function to create
@@ -18,8 +20,8 @@ extern	void    QuenosUnblock (int other_pid);
 
 extern void KernelRelinquish(void);
 extern void KernelBlock(void);
-extern void KernelUnblock(void);
-extern void KernelSendMessage(void);
+extern void KernelUnblock(int other_pid);
+extern void KernelSendMessage(int target_pid, Message *messageAddress);
 extern void *KernelReadMessage(void);
 
 /**

@@ -50,7 +50,7 @@ KernelSendMessage:
     stw r6, 8(sp)
     stw r5, 4(sp)
     stw r4, 0(sp)
-    mov r5, r6
+    mov r6, r5
     movi r5, 3 # send message enum
     trap
     ldw r6, 8(sp)

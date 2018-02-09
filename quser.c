@@ -17,42 +17,42 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 #include "qcore.h"
 
 #define USER_STACK_SIZE 256
-static  char    P0stack[USER_STACK_SIZE];
 static  char    P1stack[USER_STACK_SIZE];
 static  char    P2stack[USER_STACK_SIZE];
+static  char    P3stack[USER_STACK_SIZE];
+static  char    P4stack[USER_STACK_SIZE];
 
 volatile int* JTAG_UART_ptr; // JTAG UART address
 /**
  * Application binary interface documentation says other_pid will be passed into r4
  */
-void    QuenosUnblock (int other_pid) {
-    KernelUnblock(other_pid);
+
+static void Process1 (void)
+{
+    for (;;)
+    {
+        printString("1\n");
+        KernelBlock();
+    }
 }
-//yolo swag
-static void Process0(void){
-    for (;;){
+
+static void Process2 (void)
+{
+    for (;;)
+    {
+        printString("2\n");
+        KernelUnblock(1);
         KernelRelinquish();
     }
 }
 
-/**
-target_pid in r4, message address into r5
-*/
-void QuenosSendMessage(int target_pid, Message *messageAddress){
-	KernelSendMessage(target_pid, messageAddress);
-}
-
-unsigned int QuenosReceiveMessage(){
-    return KernelReadMessage();
-}
-
-static	void    Process1 (void)
+static void Process3 (void)
 {
         for (;;)
         {
+            printString("3\n");
             Message *m;
-            printString("a\n");
-            m = QuenosReceiveMessage();
+            m = KernelReadMessage();
             if (m != 0){
                 int i;
                 for (i=0; i < strlen(m->data); i++) {
@@ -68,7 +68,7 @@ static	void    Process1 (void)
         }
 }
 
-static	void    Process2 (void)
+static void Process4 (void)
 {
     Message m;
     m.data[0] = 'h'; // char array
@@ -81,17 +81,18 @@ static	void    Process2 (void)
     m.prev = 0;
     for (;;)
     {
-        printString("b\n");
-        QuenosSendMessage(1, &m);
+        printString("4\n");
+        KernelSendMessage(3, &m);
         KernelRelinquish();
     }
 }
 
 void UserProcesses (void)
 {
-    QuenosNewProcess(Process0, P0stack, USER_STACK_SIZE );
     QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
+    QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE );
+    QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE );
 }
 
 /*----------------------------------------------------------------*/

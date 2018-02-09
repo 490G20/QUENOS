@@ -184,8 +184,8 @@ void interrupt_handler (void)
                 /* showReadyQueue(); */
             }
             else if (requestType == SEND_MESSAGE){
-                printString("send\n");
-                showReadyQueue();
+                /* printString("send\n"); */
+                /* showReadyQueue(); */
                 int target_pid = *(casted_prev_sp+4);
                 Message *messageToSend = *(casted_prev_sp+6);
                 AddMessageToTail(&process_array[target_pid].m_queue, messageToSend);
@@ -203,11 +203,11 @@ void interrupt_handler (void)
 
                 running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
-                showReadyQueue();
+                /* showReadyQueue(); */
 	    }
             else if (requestType == READ_MESSAGE){
-                printString("readin\n");
-                showReadyQueue();
+                /* printString("readin\n"); */
+                /* showReadyQueue(); */
                 need_dispatch = 0;
                 Message *current_message;
                 current_message = DequeueMessageHead(&running_process->m_queue);
@@ -224,7 +224,7 @@ void interrupt_handler (void)
                     need_dispatch = 1;
                 }
 
-                showReadyQueue();
+                /* showReadyQueue(); */
 	      }
     }
 

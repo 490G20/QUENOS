@@ -47,9 +47,16 @@ void append(char* s, char c) {
         s[len+1] = '\0';
 }
 
+int startsWith(const char *pre, const char *str) {
+    int lenpre = strlen(pre);
+    int lenstr = strlen(str);
+    return lenstr < lenpre ? 0 : strncmp(pre, str, lenpre) == 0;
+}
+
 void TerminalProcess (void)
 {
     char input[30];
+    printString("> ");
     for (;;) {
         char i;
         i = get_char();
@@ -60,11 +67,26 @@ void TerminalProcess (void)
             if (i == '\n') {
                 if (strcmp(input, "queue") == 0) {
                     ShowReadyQueue();
-                } else if (strcmp(input, "ab") == 0) {
+                } else if (strcmp(input, "hi") == 0) {
                     printString("hey\n");
+                } else if (startsWith("send ", input)) {
+                    Message m;
+                    int j = 5;
+                    int k = 0;
+                    while (input[j] != '\0')
+                    {
+                        m.data[k] = input[j];
+                        j++;
+                        k++;
+                    }
+                    m.data[k] = '\0';
+                    m.next = 0;
+                    m.prev = 0;
+                    KernelSendMessage(5, &m);
                 }
 
                 memset(input, 0, sizeof(input));
+                printString("> ");
                 break;
             }
 

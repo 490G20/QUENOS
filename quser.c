@@ -17,10 +17,11 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 #include "qcore.h"
 
 #define USER_STACK_SIZE 256
-static  char    P1stack[USER_STACK_SIZE];
-static  char    P2stack[USER_STACK_SIZE];
-static  char    P3stack[USER_STACK_SIZE];
-static  char    P4stack[USER_STACK_SIZE];
+static char P1stack[USER_STACK_SIZE];
+static char P2stack[USER_STACK_SIZE];
+static char P3stack[USER_STACK_SIZE];
+static char P4stack[USER_STACK_SIZE];
+static char P5stack[USER_STACK_SIZE];
 
 volatile int* JTAG_UART_ptr; // JTAG UART address
 /**
@@ -31,7 +32,7 @@ static void Process1 (void)
 {
     for (;;)
     {
-        printString("1\n");
+        /* printString("1\n"); */
         KernelBlock();
     }
 }
@@ -40,7 +41,7 @@ static void Process2 (void)
 {
     for (;;)
     {
-        printString("2\n");
+        /* printString("2\n"); */
         KernelUnblock(1);
         KernelRelinquish();
     }
@@ -50,18 +51,18 @@ static void Process3 (void)
 {
         for (;;)
         {
-            printString("3\n");
+            /* printString("3\n"); */
             Message *m;
             m = KernelReadMessage();
             if (m != 0){
                 int i;
                 for (i=0; i < strlen(m->data); i++) {
-                    put_jtag(JTAG_UART_ptr, m->data[i]);
+                    /* put_jtag(JTAG_UART_ptr, m->data[i]); */
                 }
-                printString("\n");
+                /* printString("\n"); */
             }
             else {
-                printString("no message");
+                /* printString("no message"); */
             }
 
             KernelRelinquish();
@@ -81,10 +82,28 @@ static void Process4 (void)
     m.prev = 0;
     for (;;)
     {
-        printString("4\n");
+        /* printString("4\n"); */
         KernelSendMessage(3, &m);
         KernelRelinquish();
     }
+}
+
+static void Process5 (void)
+{
+        for (;;)
+        {
+            /* printString("5\n"); */
+            Message *m;
+            m = KernelReadMessage();
+            printString("Process 5 recieved this message: ");
+            int i;
+            for (i=0; i < strlen(m->data); i++) {
+                put_jtag(JTAG_UART_ptr, m->data[i]);
+            }
+            printString("\n");
+
+            KernelRelinquish();
+        }
 }
 
 void UserProcesses (void)
@@ -93,6 +112,7 @@ void UserProcesses (void)
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
     QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE );
     QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE );
+    QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE );
 }
 
 /*----------------------------------------------------------------*/

@@ -62,7 +62,6 @@ void ShowReadyQueue (void) {
     put_jtag(JTAG_UART_ptr,'\n');
 }
 
-
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
 void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack_size)
@@ -71,11 +70,17 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
     int new_pid = num_of_processes++;	/* assign new pid */
     Process* new_process = &process_array[new_pid];	/* pointer to descriptor */
 
+    //initialize empty message
+    MessageQueue mq;
+    mq.head = 0;
+    mq.tail = 0;
+
     //create new process
     new_process->pid = new_pid;
     new_process->state = READY;
     new_process->user_stack_pointer = stack_bottom + stack_size - 32;
     new_process->program_address = (unsigned int) entry_point;
+    new_process->m_queue = mq;
 
     // Set ea value in process stack
     unsigned int* p = (unsigned int*) new_process->user_stack_pointer + 29;
@@ -100,6 +105,21 @@ static int QuenosCoreBlockSelf (void)
 {
     running_process->state = BLOCKED;
     return 1; /* need dispatch of new process */
+}
+
+// may need header in header file for use in other method?
+static void QuenosCoreSendMessage(int target_pid, Message *m){
+	// Shove message (address?) somewhere kernel can get at it
+
+	if (process_array[target_pid].state == WAITING_FOR_MESSAGE){
+		/* only unblock and add to ready queue if it was blocked */
+        process_array[target_pid].state = READY;
+        AddToTail (&ready_queue, &process_array[target_pid]);
+    }
+
+	// Relinquish kernel here or in the IH preferable?
+
+	// Dispatch something
 }
 
 static int QuenosCoreUnblock (int other_pid)
@@ -163,7 +183,49 @@ void interrupt_handler (void)
                 need_dispatch = QuenosCoreUnblock(other_pid);
                 /* showReadyQueue(); */
             }
+            else if (requestType == SEND_MESSAGE){
+                printString("send\n");
+                showReadyQueue();
+                int target_pid = *(casted_prev_sp+4);
+                Message *messageToSend = *(casted_prev_sp+6);
+                AddMessageToTail(&process_array[target_pid].m_queue, messageToSend);
 
+                if (process_array[target_pid].state == WAITING_FOR_MESSAGE){
+                    process_array[target_pid].state = READY;
+                    AddToTail (&ready_queue, &process_array[target_pid]);
+
+
+                    Message *current_message;
+                    unsigned int* casted_target_sp = (unsigned int*) process_array[target_pid].user_stack_pointer;
+                    current_message = DequeueMessageHead(&process_array[target_pid].m_queue);
+                    *(casted_target_sp+2) = current_message;
+                }
+
+                running_process->state = READY;
+                AddToTail(&ready_queue, running_process);
+                showReadyQueue();
+	    }
+            else if (requestType == READ_MESSAGE){
+                printString("readin\n");
+                showReadyQueue();
+                need_dispatch = 0;
+                Message *current_message;
+                current_message = DequeueMessageHead(&running_process->m_queue);
+
+                if (current_message != 0){
+                    running_process->state = READY;
+                    AddToTail(&ready_queue, running_process);
+                    // Store address of current message into where the expected saved value of r2
+                    *(casted_prev_sp+2) = current_message;
+                }
+                else {
+                    running_process->state = WAITING_FOR_MESSAGE;
+                    // Do not hog CPU, let another process run and recheck on next run
+                    need_dispatch = 1;
+                }
+
+                showReadyQueue();
+	      }
     }
 
     /* Fifth task: decide if dispatching of new process is needed. */

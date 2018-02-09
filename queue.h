@@ -20,5 +20,7 @@ typedef struct  _queue
 extern  void    AddToTail (Queue *queue, Process *process);
 extern  Process     *DequeueHead (Queue *queue);
 
+// Moved message queue to qcore
+
 #endif /* _QUEUE_H_ */
 

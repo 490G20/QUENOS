@@ -11,17 +11,34 @@ DESCRIPTION:	Type definitions and function declarations for core of
 		Queen's University
 ******************************************************************************/
 
-typedef enum {READY, RUNNING, BLOCKED} State;
+typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE} State;
+
+typedef struct _message {
+	struct _message *prev;
+	struct _message *next;
+	unsigned char data[32]; // Revise into hardcoded, and do dynamic mem allocation later if necessary for proof of concept
+} Message;
+
+// MessageQueue is essentially identical to the (process) queue, except it is for Message objects (structs)
+typedef struct _messageQueue { // watch the capital?
+    Message *head;
+    Message *tail;
+} MessageQueue;
+
+extern void AddMessageToTail(MessageQueue *queue, Message *message);
+extern Message *DequeueMessageHead (MessageQueue *queue);
 
 typedef struct  _process // Formerly _pdb
 {
+        unsigned int program_address;
         struct  _process    *prev;
         struct  _process    *next;
         int     pid; // process id
         State   state;
 		// TODO: Best to name user stack pointer or stack pointer? formerly just SP
         void    *user_stack_pointer;		/* saves user stack pointer when not running */
-        unsigned int program_address;
+
+        struct _messageQueue m_queue; // Move elsewhere if debugging with hairy pointer math
 } Process; // Formerly pdb
 
 #define MAX_NUM_OF_PROCESSES 16

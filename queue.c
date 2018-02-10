@@ -23,6 +23,20 @@ void    AddToTail (Queue *queue, Process *process)
         queue->tail = process;
 }
 
+void    AddToHead (Queue *queue, Process *process)
+{
+        if (queue->head != 0)
+        {
+          process->prev = queue->head->prev;
+          process->next = queue->head->next;
+        }
+        else
+        {
+          queue>tail = process;
+        }
+        queue->head = process;
+}
+
 Process     *DequeueHead (Queue *queue)
 {
         Process     *ret;

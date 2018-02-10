@@ -28,7 +28,7 @@ static int num_of_processes = 0;
 
 static int need_dispatch;
 
-typedef enum    {Relinquish, BlockSelf, Unblock, TimerDelay} Request;
+typedef enum    {Relinquish, BlockSelf, Unblock, TimerDelay, TimerInterrupt } Request;
 
 extern unsigned int process_stack_pointer;
 extern unsigned int ksp = (unsigned int) &kernel_stack[511];
@@ -73,6 +73,7 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
   //create new process
   new_process->pid = new_pid;
   new_process->state = Ready;
+  new_process->delay_time = 0;
   new_process->user_stack_pointer = stack_bottom + stack_size - 32;
   new_process->program_address = (unsigned int) entry_point;
 
@@ -104,7 +105,7 @@ static int QuenosCoreBlockSelf (void)
 
 static int QuenosCoreTimerBlockSelf (void)
 {
-  running_process->state = Blocked;
+  running_process->state = TimerDelay;
   return 1; /* need dispatch of new process */
 }
 
@@ -119,6 +120,28 @@ static int QuenosCoreUnblock (int other_pid)
   return 0; /* no dispatch of new process */
 }
 
+static int QuenosCoreTimerUnblock (void) 
+{
+  unsigned int dispatchNeeded = 1;
+  for (int i = 0; i <= num_of_processes; i++)
+  {
+    if (process_array[i].state == TimerDelay &&  process_array[i].delay_time == 0)
+    {
+      /* Find the process that caused this timer interrupt */
+      running_process->state = Ready;
+      AddToHead (&ready_queue, running_process);
+      running_process = &process_array[i];
+      running_process->state = Running;
+      dispatchNeeded = 0;
+    }  
+  }
+  /*  
+  *   Dispatch is needed if no process' interval is done 
+  *   i.e. dispatch is needed if interrupt happens through
+  *   round-robin selection
+  */
+  return dispatchNeeded; 
+}
 /* software interrupt routines */
 
 /* The variables below should ideally be automatic within the two
@@ -139,7 +162,7 @@ void interrupt_handler (void)
   int requestType = *(casted_prev_sp+5);
 
   int ipending;
-
+  int counter;
   /* Third task: retrieve arguments for kernel call. */
   /* They are available on the user process stack. */
   ipending = NIOS2_READ_IPENDING(); // Read the interrupt
@@ -170,20 +193,56 @@ void interrupt_handler (void)
 		showReadyQueue();
   	}
 	else if (requestType == TimerDelay){
-		int other_pid = *(casted_prev_sp+4);
+		unsigned int delay = *(casted_prev_sp+4);
+    unsigned int current_timer = *(interval_timer_ptr + 0x3)+ (*(interval_timer_ptr + 0x3) << 16);
+    running_process->delay_time = delay - current_timer;
 		printString("timed\n");
 		showReadyQueue();
-  		need_dispatch = QuenosCoreTimerBlockSelf();
+  	need_dispatch = QuenosCoreTimerBlockSelf();
 		showReadyQueue();
-		// Initialize wait time in PCB
 		
 	}
-	else if (TIMER_INTERUPT) {
+	else if (requestType == TimerInterrupt)
+	{
+		printString("ti\n");
+		showReadyQueue();
+  		running_process->state = Ready;
+  		AddToHead(&ready_queue, running_process);
+  		need_dispatch = QuenosCoreTimerUnblock();       /* need dispatch of new process */
+      showReadyQueue();
+		/* Set new timer interval ****************/
 		// Find the least remaining wait time
-		// If least is less than timerInterval 
-			//set interval_timer register to least
-		// else
-			//set interval_timer register to timerInterval
+    int min = INT_MAX;
+    for (int i = 0; i <= num_of_processes; i++)
+    {
+      if (process_array[i].delay_time < min)
+      {
+        min = process_array[i].delay_time;
+      }
+    }
+    if (min > msec)
+    {
+      counter = min * 50 * 1000000; //0x190000; // 1/(50 MHz) × (0x190000) = 33 msec
+    }
+    else 
+    {
+      counter = msec * 50 * 1000000; //0x190000; // 1/(50 MHz) × (0x190000) = 33 msec
+    }
+  
+    *(interval_timer_ptr + 0x2) = (counter & 0xFFFF);
+    *(interval_timer_ptr + 0x3) = (counter >> 16) & 0xFFFF;
+    *(interval_timer_ptr + 1) = 0x7; 		// STOP = 0, START = 1, CONT = 1, ITO = 1
+    
+    for (int i = 0; i <= num_of_processes; i++)
+    {
+      if (process_array[i].delay_time > 0)
+        {
+          process_array[i].delay_time = process_array[i].delay_time - counter;
+        }
+    }
+	}
+	else if (TIMER_INTERUPT) {
+		// Save context by making software interrupt
 	}
 
   }

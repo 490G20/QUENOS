@@ -18,6 +18,7 @@ typedef struct  _queue
 } Queue;
 
 extern  void    AddToTail (Queue *queue, Process *process);
+extern  void    AddToHead (Queue *queue, Process *process);
 extern  Process     *DequeueHead (Queue *queue);
 
 #endif /* _QUEUE_H_ */

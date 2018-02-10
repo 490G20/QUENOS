@@ -11,7 +11,7 @@ DESCRIPTION:	Type definitions and function declarations for core of
 		Queen's University
 ******************************************************************************/
 
-typedef enum {Ready, Running, Blocked} State;
+typedef enum {Ready, Running, Blocked, TimerDelay} State;
 
 typedef struct  _process // Formerly _pdb
 {
@@ -22,6 +22,7 @@ typedef struct  _process // Formerly _pdb
 		// TODO: Best to name user stack pointer or stack pointer? formerly just SP
         void    *user_stack_pointer;		/* saves user stack pointer when not running */
         unsigned int program_address;
+        unsigned int delay_time;
 } Process; // Formerly pdb
 
 #define MAX_NUM_OF_PROCESSES 16

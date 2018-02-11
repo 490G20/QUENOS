@@ -77,6 +77,7 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
 
     //create new process
     new_process->pid = new_pid;
+    new_process->interrupt_delay = 0;
     new_process->state = READY;
     new_process->user_stack_pointer = stack_bottom + stack_size - 32;
     new_process->program_address = (unsigned int) entry_point;
@@ -133,6 +134,23 @@ static int QuenosCoreUnblock (int other_pid)
     return 0; /* no dispatch of new process */
 }
 
+static int QuenosCoreTimerDelay (void)
+{
+    running_process->state = DELAYED;
+    return 1; /* need dispatch of new process */
+}
+
+static int QuenosCoreTimerUnblock (int other_pid)
+{
+    if (process_array[other_pid].state == TIMER_DELAY)
+    {
+        /* only unblock and add to ready queue if it was blocked */
+        process_array[other_pid].state = READY;
+        AddToTail (&ready_queue, &process_array[other_pid]);
+    }
+    return 0; /* no dispatch of new process */
+}
+
 /* software interrupt routines */
 
 /* The variables below should ideally be automatic within the two
@@ -160,6 +178,19 @@ void interrupt_handler (void)
 
     if (ipending) {
     // This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
+      if (ipending & 0x1){
+        // Find the process with the timerdelay
+        int i = 0;
+        while (i <= num_of_processes){
+          int previous_interval = *(interval_timer_ptr + 0x2)+ (*(interval_timer_ptr + 0x3) << 16);
+           if (process_array[i].state == TIMER_DELAY &&  process_array[i].delay_time == previous_interval){
+             process_array[i].delay_time = 0;
+             need_dispatch = QuenosCoreTimerUnblock(i);
+             i = num_of_processes + 1;
+           }
+           i++;
+        }      
+      }
     }
     else {
             if (requestType == RELINQUISH) {
@@ -226,6 +257,22 @@ void interrupt_handler (void)
 
                 showReadyQueue();
 	      }
+        else if (requestType == TIMER_DELAY){
+                // Set the timer using the time we passed in 
+                unsigned int msec = *(casted_prev_sp+4); //currently assumes only one process is running
+                unsigned int counter = msec * 50000000;
+                *(interval_timer_ptr + 0x2) = (counter & 0xFFFF);
+                *(interval_timer_ptr + 0x3) = (counter >> 16) & 0xFFFF;
+                *(interval_timer_ptr + 1) = 0x5;  // STOP = 0, START = 1, CONT = 0, ITO = 1
+                
+                // TODO: Save the value of the interrupt delay to PCB
+                running_process->state =  DELAYED;
+                running_process->interrupt_delay = counter;
+                
+                //TODO: Blockself
+                
+                
+        }
     }
 
     /* Fifth task: decide if dispatching of new process is needed. */

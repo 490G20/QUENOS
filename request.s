@@ -69,3 +69,15 @@ KernelReadMessage:
     ldw r5, 0(sp)
     addi sp,sp,4
     ret
+
+KernelTimerDelay:
+    #Expect otherpid in r4 according to altera nios 2 application binary interface
+    subi sp, sp, 8
+    stw r5, 4(sp)
+    stw r4, 0(sp)
+    movi r5,2 #unblock enum
+    trap
+    ldw r5, 4(sp)
+    ldw r4, 0(sp)
+    addi sp,sp,8
+	ret

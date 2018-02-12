@@ -35,8 +35,6 @@ extern unsigned int ksp = (unsigned int) &kernel_stack[511];
 unsigned int temp_sp;
 unsigned int sp_of_first_process;
 
-extern volatile int key_pressed;
-
 void put_jtag(volatile int* JTAG_UART_ptr, char c)
 {
     while ((*(JTAG_UART_ptr + 1) & 0xFFFF0000) == 0)
@@ -154,7 +152,7 @@ static int QuenosCoreTimerUnblock (int other_pid)
     return 0; /* no dispatch of new process */
 }
 
-static int QuenosCorePBDelay(void){
+static int QuenosCorePBBlockSelf(void){
 	running_process->state = PBDEL; /*This is a special push button type delay such that it does not get confused with a regular SW delay*/
 	return 1;
 	/* Need Dispatch of new process */
@@ -191,7 +189,7 @@ void interrupt_handler (void)
     int requestType = *(casted_prev_sp+5);
 
     int ipending;
-
+	extern volatile int key_pressed;
     /* Third task: retrieve arguments for kernel call. */
     /* They are available on the user process stack. */
     ipending = NIOS2_READ_IPENDING(); // Read the interrupt
@@ -208,7 +206,7 @@ void interrupt_handler (void)
              process_array[i].interrupt_delay = 0;
 			 printString("Timer unblock\n");
              need_dispatch = QuenosCoreTimerUnblock(i);
-             i = num_of_processes + 1;
+			 break;
            }
            i++;
         }      
@@ -221,22 +219,20 @@ void interrupt_handler (void)
 				press = *(KEY_ptr + 3); // read the pushbutton interrupt register
 				*(KEY_ptr + 3) = 0; // clear the interrupt
 				if (press & 0x2) // KEY1
-					key_pressed = 1;
+				{}//key_pressed = 1;
 				else if (press & 0x4) // KEY2
-					key_pressed = 2;
+				{}//key_pressed = 2;
 				else // press & 0x8, which is KEY3
-		  			key_pressed = 3;
-				return;
-				
+				{}//key_pressed = 3;
+
 		        int i = 0;
 		        while (i <= num_of_processes){
-		          int previous_interval = *(interval_timer_ptr + 0x2)+ (*(interval_timer_ptr + 0x3) << 16);
 		          	if (process_array[i].state == PBDEL){
 		             need_dispatch = QuenosCorePBUnblock(i);
-		             i = num_of_processes + 1;
 					 break;
 		           }
 		           i++;
+				}
 	  }
     }
     else {
@@ -252,6 +248,12 @@ void interrupt_handler (void)
                 printString("blk\n");
                 showReadyQueue();
                 need_dispatch = QuenosCoreBlockSelf();
+                showReadyQueue();
+            }
+			else if (requestType == PB_BLOCK) {
+                printString("PBBlock\n");
+                showReadyQueue();
+                need_dispatch = QuenosCorePBBlockSelf();
                 showReadyQueue();
             }
             else if (requestType == UNBLOCK){

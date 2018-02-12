@@ -14,7 +14,7 @@ DESCRIPTION:	Declarations for user-supplied function to create
 ******************************************************************************/
 
 extern  void    UserProcesses (void);
-typedef enum    {RELINQUISH, BLOCK_SELF, UNBLOCK, SEND_MESSAGE, READ_MESSAGE, TIMER_DELAY, PB_DELAY} Request;
+typedef enum    {RELINQUISH, BLOCK_SELF, UNBLOCK, SEND_MESSAGE, READ_MESSAGE, TIMER_DELAY, PB_BLOCK} Request;
 
 extern	void    QuenosUnblock (int other_pid);
 
@@ -24,6 +24,7 @@ extern void KernelUnblock(int other_pid);
 extern void KernelTimerDelay(unsigned int delaytime);
 extern void KernelSendMessage(int target_pid, Message *messageAddress);
 extern void *KernelReadMessage(void);
+extern void KernelPBBlock(void);
 
 /**
  * We note that KernelUnblock and KernelSendMessage have no arguments here because according to application binary

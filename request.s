@@ -9,6 +9,7 @@
 .global KernelSendMessage
 .global KernelReadMessage
 .global KernelTimerDelay
+.global KernelPBBlock
 
 
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
@@ -86,7 +87,7 @@ KernelTimerDelay:
 KernelPBBlock:
     subi sp, sp, 4
     stw r5, 0(sp)
-    movi r5,5 #block self enum
+    movi r5,6 #block self enum
     trap
     ldw r5, 0(sp)
     addi sp,sp,4

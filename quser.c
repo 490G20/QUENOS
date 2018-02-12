@@ -109,8 +109,8 @@ static void Process5 (void)
 
 void UserProcesses (void)
 {
-  QuenosNewProcess (TimerProcess, TimerProcessStack, USER_STACK_SIZE);  
-  QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
+	QuenosNewProcess (TimerProcess, TimerProcessStack, USER_STACK_SIZE);  
+	QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
     QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
     QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);

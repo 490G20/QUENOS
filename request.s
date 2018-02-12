@@ -8,6 +8,7 @@
 #.type KernelUnblock, @function
 .global KernelSendMessage
 .global KernelReadMessage
+.global KernelTimerDelay
 
 
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
@@ -75,7 +76,7 @@ KernelTimerDelay:
     subi sp, sp, 8
     stw r5, 4(sp)
     stw r4, 0(sp)
-    movi r5,2 #unblock enum
+    movi r5,5 #Timer Delay enum
     trap
     ldw r5, 4(sp)
     ldw r4, 0(sp)

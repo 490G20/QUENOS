@@ -19,6 +19,7 @@ static Process *running_process;
 static Queue ready_queue;
 
 extern volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+volatile int* interval_timer_ptr = (int*) 0x10002000;// interval timer base address
 
 static Process process_array[MAX_NUM_OF_PROCESSES];
 
@@ -142,7 +143,7 @@ static int QuenosCoreTimerDelay (void)
 
 static int QuenosCoreTimerUnblock (int other_pid)
 {
-    if (process_array[other_pid].state == TIMER_DELAY)
+    if (process_array[other_pid].state == DELAYED)
     {
         /* only unblock and add to ready queue if it was blocked */
         process_array[other_pid].state = READY;
@@ -179,12 +180,14 @@ void interrupt_handler (void)
     if (ipending) {
     // This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
       if (ipending & 0x1){
+		*(interval_timer_ptr) = 0; // clear the interrupt
         // Find the process with the timerdelay
         int i = 0;
         while (i <= num_of_processes){
           int previous_interval = *(interval_timer_ptr + 0x2)+ (*(interval_timer_ptr + 0x3) << 16);
-           if (process_array[i].state == TIMER_DELAY &&  process_array[i].delay_time == previous_interval){
-             process_array[i].delay_time = 0;
+           if (process_array[i].state == DELAYED &&  process_array[i].interrupt_delay == previous_interval){
+             process_array[i].interrupt_delay = 0;
+			 printString("Timer unblock\n");
              need_dispatch = QuenosCoreTimerUnblock(i);
              i = num_of_processes + 1;
            }
@@ -258,19 +261,18 @@ void interrupt_handler (void)
                 showReadyQueue();
 	      }
         else if (requestType == TIMER_DELAY){
+				printString("td\n");
                 // Set the timer using the time we passed in 
                 unsigned int msec = *(casted_prev_sp+4); //currently assumes only one process is running
-                unsigned int counter = msec * 50000000;
+                unsigned int counter = msec * 50000;
+				//counter = 0x190000;
                 *(interval_timer_ptr + 0x2) = (counter & 0xFFFF);
                 *(interval_timer_ptr + 0x3) = (counter >> 16) & 0xFFFF;
                 *(interval_timer_ptr + 1) = 0x5;  // STOP = 0, START = 1, CONT = 0, ITO = 1
                 
-                // TODO: Save the value of the interrupt delay to PCB
-                running_process->state =  DELAYED;
                 running_process->interrupt_delay = counter;
                 
-                //TODO: Blockself
-                
+				need_dispatch = QuenosCoreTimerDelay();
                 
         }
     }

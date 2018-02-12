@@ -17,17 +17,28 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 #include "qcore.h"
 
 #define USER_STACK_SIZE 256
+static  char    TimerProcessStack[USER_STACK_SIZE];
 static  char    P1stack[USER_STACK_SIZE];
 static  char    P2stack[USER_STACK_SIZE];
 static  char    P3stack[USER_STACK_SIZE];
 static  char    P4stack[USER_STACK_SIZE];
 static  char    P5stack[USER_STACK_SIZE];
 
+
 volatile int* JTAG_UART_ptr; // JTAG UART address
 /**
  * Application binary interface documentation says other_pid will be passed into r4
  */
 
+
+ static void TimerProcess (void) {
+	for (;;)
+	{
+		printString("Timer\n");
+		KernelTimerDelay(1000);
+	}
+ }
+ 
 static void Process1 (void)
 {
     for (;;)
@@ -98,11 +109,13 @@ static void Process5 (void)
 
 void UserProcesses (void)
 {
-    QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
+  QuenosNewProcess (TimerProcess, TimerProcessStack, USER_STACK_SIZE);  
+  QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
     QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
     QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);
 	QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE);
+
 }
 
 /*----------------------------------------------------------------*/

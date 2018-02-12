@@ -204,7 +204,7 @@ void interrupt_handler (void)
         int i = 0;
         while (i <= num_of_processes){
           int previous_interval = *(interval_timer_ptr + 0x2)+ (*(interval_timer_ptr + 0x3) << 16);
-           if (process_array[i].state == DELAYED &&  process_array[i].interrupt_delay == previous_interval){
+           if (process_array[i].state == DELAYED ){//&&  process_array[i].interrupt_delay == previous_interval){
              process_array[i].interrupt_delay = 0;
 			 printString("Timer unblock\n");
              need_dispatch = QuenosCoreTimerUnblock(i);

@@ -19,6 +19,6 @@ void QuenosInit (void)
   Bit 10: Serial port
   Bit 8/9(?): JTAG port
   **/
-  NIOS2_WRITE_IENABLE(0x0701);
-  NIOS2_WRITE_STATUS(1);
+  NIOS2_WRITE_IENABLE(0x3);
+  NIOS2_WRITE_ESTATUS(1);
 }

@@ -21,6 +21,7 @@ static  char    P1stack[USER_STACK_SIZE];
 static  char    P2stack[USER_STACK_SIZE];
 static  char    P3stack[USER_STACK_SIZE];
 static  char    P4stack[USER_STACK_SIZE];
+static  char    P5stack[USER_STACK_SIZE];
 
 volatile int* JTAG_UART_ptr; // JTAG UART address
 /**
@@ -86,13 +87,22 @@ static void Process4 (void)
         KernelRelinquish();
     }
 }
+static void Process5 (void)
+{
+	for (;;)
+	{
+		KernelPBBlock();
+		printString("Pressed");
+	}
+}
 
 void UserProcesses (void)
 {
     QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE );
-    QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE );
+    QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
+    QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);
+	QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE);
 }
 
 /*----------------------------------------------------------------*/

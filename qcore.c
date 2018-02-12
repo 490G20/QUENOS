@@ -34,6 +34,8 @@ extern unsigned int ksp = (unsigned int) &kernel_stack[511];
 unsigned int temp_sp;
 unsigned int sp_of_first_process;
 
+extern volatile int key_pressed;
+
 void put_jtag(volatile int* JTAG_UART_ptr, char c)
 {
     while ((*(JTAG_UART_ptr + 1) & 0xFFFF0000) == 0)
@@ -151,6 +153,23 @@ static int QuenosCoreTimerUnblock (int other_pid)
     return 0; /* no dispatch of new process */
 }
 
+static int QuenosCorePBDelay(void){
+	running_process->state = PBDEL; /*This is a special push button type delay such that it does not get confused with a regular SW delay*/
+	return 1;
+	/* Need Dispatch of new process */
+}
+
+static int QuenosCorePBUnblock (int other_pid)
+{
+    if (process_array[other_pid].state == PBDEL)
+    {
+        /* only if a button was pushed then unblock this process to write a "pressed" string to the console */
+        process_array[other_pid].state = READY;
+        AddToTail (&ready_queue, &process_array[other_pid]);
+    }
+    return 0; /* no dispatch of new process */
+}
+
 /* software interrupt routines */
 
 /* The variables below should ideally be automatic within the two
@@ -191,6 +210,31 @@ void interrupt_handler (void)
            i++;
         }      
       }
+	  if (ipending & 0x2){
+		  //Taken from the altera DE2-115 documentation
+				volatile int * KEY_ptr = (int *) 0x10000050;
+				volatile int * slider_switch_ptr = (int *) 0x10000040;
+				int press;
+				press = *(KEY_ptr + 3); // read the pushbutton interrupt register
+				*(KEY_ptr + 3) = 0; // clear the interrupt
+				if (press & 0x2) // KEY1
+					key_pressed = 1;
+				else if (press & 0x4) // KEY2
+					key_pressed = 2;
+				else // press & 0x8, which is KEY3
+		  			key_pressed = 3;
+				return;
+				
+		        int i = 0;
+		        while (i <= num_of_processes){
+		          int previous_interval = *(interval_timer_ptr + 0x2)+ (*(interval_timer_ptr + 0x3) << 16);
+		          	if (process_array[i].state == PBDEL){
+		             need_dispatch = QuenosCorePBUnblock(i);
+		             i = num_of_processes + 1;
+					 break;
+		           }
+		           i++;
+	  }
     }
     else {
             if (requestType == RELINQUISH) {

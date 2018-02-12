@@ -81,3 +81,12 @@ KernelTimerDelay:
     ldw r4, 0(sp)
     addi sp,sp,8
 	ret
+	
+KernelPBBlock:
+    subi sp, sp, 4
+    stw r5, 0(sp)
+    movi r5,5 #block self enum
+    trap
+    ldw r5, 0(sp)
+    addi sp,sp,4
+	ret

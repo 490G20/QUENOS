@@ -11,7 +11,7 @@ DESCRIPTION:	Type definitions and function declarations for core of
 		Queen's University
 ******************************************************************************/
 
-typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE, DELAYED} State;
+typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE, DELAYED, PBDEL} State;
 
 typedef struct _message {
 	struct _message *prev;

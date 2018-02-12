@@ -35,6 +35,8 @@ extern unsigned int ksp = (unsigned int) &kernel_stack[511];
 unsigned int temp_sp;
 unsigned int sp_of_first_process;
 
+/* Below functions are for utility and demo purpouses */
+
 void put_jtag(volatile int* JTAG_UART_ptr, char c)
 {
     while ((*(JTAG_UART_ptr + 1) & 0xFFFF0000) == 0)
@@ -53,7 +55,8 @@ void printString(char *text_string)
 /**
  *  Prints out the ready queue, used for debugging
  */
-void showReadyQueue (void) {
+void showReadyQueue (void) 
+{
     Process * p = ready_queue.head;
     printString("queue: ");
     while (p!=0){
@@ -62,6 +65,17 @@ void showReadyQueue (void) {
     }
     put_jtag(JTAG_UART_ptr,'\n');
 }
+
+void short_delay (volatile int count)
+{
+	asm("					;\
+		ldw r4, 0(sp)		;\
+	loop:					;\
+		subi r4, r4, 1		;\
+		bne r4, r0, loop	;\
+	");
+}
+
 
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
@@ -182,7 +196,8 @@ static int QuenosCorePBUnblock (int other_pid)
 void interrupt_handler (void)
 {
     printString("i\n");
-    // First task: Update process control block for running process with stackpointer
+	short_delay(32000);
+	// First task: Update process control block for running process with stackpointer
     running_process->user_stack_pointer = (void*) process_stack_pointer;
     unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
 
@@ -212,18 +227,28 @@ void interrupt_handler (void)
         }      
       }
 	  if (ipending & 0x2){
+		  
 		  //Taken from the altera DE2-115 documentation
 				volatile int * KEY_ptr = (int *) 0x10000050;
 				volatile int * slider_switch_ptr = (int *) 0x10000040;
+				volatile int * green_LED_ptr = (int *)0x10000010;
 				int press;
+				
 				press = *(KEY_ptr + 3); // read the pushbutton interrupt register
 				*(KEY_ptr + 3) = 0; // clear the interrupt
+				
 				if (press & 0x2) // KEY1
-				{}//key_pressed = 1;
+				{printString("PUSHED 1!\n");
+				*(green_LED_ptr) = 4;}
+				//key_pressed = 1;
 				else if (press & 0x4) // KEY2
-				{}//key_pressed = 2;
+				{printString("PUSHED 2!\n");
+				*(green_LED_ptr) = 16;}
+				//key_pressed = 2;
 				else // press & 0x8, which is KEY3
-				{}//key_pressed = 3;
+				{printString("PUSHED 3!\n");
+				*(green_LED_ptr) = 64;}
+				//key_pressed = 3;
 
 		        int i = 0;
 		        while (i <= num_of_processes){

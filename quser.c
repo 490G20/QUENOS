@@ -31,13 +31,13 @@ volatile int* JTAG_UART_ptr; // JTAG UART address
  */
 
 
- static void TimerProcess (void) {
+ /*static void TimerProcess (void) {
 	for (;;)
 	{
 		printString("Timer\n");
 		KernelTimerDelay(1000);
 	}
- }
+ }*/
  
 static void Process1 (void)
 {
@@ -57,7 +57,7 @@ static void Process2 (void)
         KernelRelinquish();
     }
 }
-
+/*
 static void Process3 (void)
 {
         for (;;)
@@ -98,22 +98,23 @@ static void Process4 (void)
         KernelRelinquish();
     }
 }
+*/
 static void Process5 (void)
 {
 	for (;;)
 	{
 		KernelPBBlock();
-		printString("Pressed");
+		printString("Process_Pressed!\n");
 	}
 }
 
 void UserProcesses (void)
 {
-	QuenosNewProcess (TimerProcess, TimerProcessStack, USER_STACK_SIZE);  
+	//QuenosNewProcess (TimerProcess, TimerProcessStack, USER_STACK_SIZE);  
 	QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);
+   // QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
+   // QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);
 	QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE);
 
 }

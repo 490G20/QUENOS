@@ -14,7 +14,7 @@ DESCRIPTION:	Declarations for user-supplied function to create
 ******************************************************************************/
 
 extern  void    UserProcesses (void);
-typedef enum    {RELINQUISH, BLOCK_SELF, UNBLOCK, SEND_MESSAGE, READ_MESSAGE, TIMER_DELAY} Request;
+typedef enum    {RELINQUISH, BLOCK_SELF, UNBLOCK, SEND_MESSAGE, READ_MESSAGE, TIMER_DELAY, PB_DELAY} Request;
 
 extern	void    QuenosUnblock (int other_pid);
 

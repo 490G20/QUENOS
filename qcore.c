@@ -66,16 +66,6 @@ void showReadyQueue (void)
     put_jtag(JTAG_UART_ptr,'\n');
 }
 
-void short_delay (volatile int count)
-{
-	asm("					;\
-		ldw r4, 0(sp)		;\
-	loop:					;\
-		subi r4, r4, 1		;\
-		bne r4, r0, loop	;\
-	");
-}
-
 
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
@@ -196,7 +186,6 @@ static int QuenosCorePBUnblock (int other_pid)
 void interrupt_handler (void)
 {
     printString("i\n");
-	short_delay(32000);
 	// First task: Update process control block for running process with stackpointer
     running_process->user_stack_pointer = (void*) process_stack_pointer;
     unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;

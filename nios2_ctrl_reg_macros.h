@@ -11,6 +11,8 @@ do { dest = __builtin_rdctl(0); } while (0)
 
 #define NIOS2_WRITE_STATUS(value)  (__builtin_wrctl (0, value))
 
+#define NIOS2_WRITE_ESTATUS(value)  (__builtin_wrctl (1, value))
+
 #define NIOS2_READ_ESTATUS(dest)\
 do { dest = __builtin_rdctl(1); } while (0)
 

@@ -213,31 +213,31 @@ void interrupt_handler (void)
            i++;
         }      
       }
-	  if (ipending & 0x2){
-		  //Taken from the altera DE2-115 documentation
-				volatile int * KEY_ptr = (int *) 0x10000050;
-				volatile int * slider_switch_ptr = (int *) 0x10000040;
-				int press;
-				press = *(KEY_ptr + 3); // read the pushbutton interrupt register
-				*(KEY_ptr + 3) = 0; // clear the interrupt
-				if (press & 0x2) // KEY1
-					key_pressed = 1;
-				else if (press & 0x4) // KEY2
-					key_pressed = 2;
-				else // press & 0x8, which is KEY3
-		  			key_pressed = 3;
-				return;
-				
-		        int i = 0;
-		        while (i <= num_of_processes){
-		          int previous_interval = *(interval_timer_ptr + 0x2)+ (*(interval_timer_ptr + 0x3) << 16);
-		          	if (process_array[i].state == PBDEL){
-		             need_dispatch = QuenosCorePBUnblock(i);
-		             i = num_of_processes + 1;
-					 break;
-		           }
-		           i++;
-	  }
+	  //if (ipending & 0x2){
+		//  //Taken from the altera DE2-115 documentation
+		//		volatile int * KEY_ptr = (int *) 0x10000050;
+		//		volatile int * slider_switch_ptr = (int *) 0x10000040;
+		//		int press;
+		//		press = *(KEY_ptr + 3); // read the pushbutton interrupt register
+		//		*(KEY_ptr + 3) = 0; // clear the interrupt
+		//		if (press & 0x2) // KEY1
+		//			key_pressed = 1;
+		//		else if (press & 0x4) // KEY2
+		//			key_pressed = 2;
+		//		else // press & 0x8, which is KEY3
+		//  			key_pressed = 3;
+		//		return;
+		//		
+		//        int i = 0;
+		//        while (i <= num_of_processes){
+		//          	if (process_array[i].state == PBDEL){
+		//             need_dispatch = QuenosCorePBUnblock(i);
+		//             i = num_of_processes + 1;
+		//			 break;
+		//           }
+		//           i++;
+		//		}
+	  //}
     }
     else {
             if (requestType == RELINQUISH) {

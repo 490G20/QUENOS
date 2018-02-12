@@ -39,82 +39,82 @@ volatile int* JTAG_UART_ptr; // JTAG UART address
 	}
  }
  
-static void Process1 (void)
-{
-    for (;;)
-    {
-        printString("1\n");
-        KernelBlock();
-    }
-}
-
-static void Process2 (void)
-{
-    for (;;)
-    {
-        printString("2\n");
-        KernelUnblock(1);
-        KernelRelinquish();
-    }
-}
-
-static void Process3 (void)
-{
-        for (;;)
-        {
-            printString("3\n");
-            Message *m;
-            m = KernelReadMessage();
-            if (m != 0){
-                int i;
-                for (i=0; i < strlen(m->data); i++) {
-                    put_jtag(JTAG_UART_ptr, m->data[i]);
-                }
-                printString("\n");
-            }
-            else {
-                printString("no message");
-            }
-
-            KernelRelinquish();
-        }
-}
-
-static void Process4 (void)
-{
-    Message m;
-    m.data[0] = 'h'; // char array
-    m.data[1] = 'e'; // char array
-    m.data[2] = 'l'; // char array
-    m.data[3] = 'l'; // char array
-    m.data[4] = 'o'; // char array
-    m.data[5] = '\0'; // char array
-    m.next = 0;
-    m.prev = 0;
-    for (;;)
-    {
-        printString("4\n");
-        KernelSendMessage(3, &m);
-        KernelRelinquish();
-    }
-}
-static void Process5 (void)
-{
-	for (;;)
-	{
-		KernelPBBlock();
-		printString("Pressed");
-	}
-}
+//static void Process1 (void)
+//{
+//    for (;;)
+//    {
+//        printString("1\n");
+//        KernelBlock();
+//    }
+//}
+//
+//static void Process2 (void)
+//{
+//    for (;;)
+//    {
+//        printString("2\n");
+//        KernelUnblock(1);
+//        KernelRelinquish();
+//    }
+//}
+//
+//static void Process3 (void)
+//{
+//        for (;;)
+//        {
+//            printString("3\n");
+//            Message *m;
+//            m = KernelReadMessage();
+//            if (m != 0){
+//                int i;
+//                for (i=0; i < strlen(m->data); i++) {
+//                    put_jtag(JTAG_UART_ptr, m->data[i]);
+//                }
+//                printString("\n");
+//            }
+//            else {
+//                printString("no message");
+//            }
+//
+//            KernelRelinquish();
+//        }
+//}
+//
+//static void Process4 (void)
+//{
+//    Message m;
+//    m.data[0] = 'h'; // char array
+//    m.data[1] = 'e'; // char array
+//    m.data[2] = 'l'; // char array
+//    m.data[3] = 'l'; // char array
+//    m.data[4] = 'o'; // char array
+//    m.data[5] = '\0'; // char array
+//    m.next = 0;
+//    m.prev = 0;
+//    for (;;)
+//    {
+//        printString("4\n");
+//        KernelSendMessage(3, &m);
+//        KernelRelinquish();
+//    }
+//}
+//static void Process5 (void)
+//{
+//	for (;;)
+//	{
+//		KernelPBBlock();
+//		printString("Pressed");
+//	}
+//}
 
 void UserProcesses (void)
 {
   QuenosNewProcess (TimerProcess, TimerProcessStack, USER_STACK_SIZE);  
-  QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);
-	QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE);
+// QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
+//   QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
+//   QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
+//   QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);
+//	QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE);
 
 }
 

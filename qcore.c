@@ -227,18 +227,23 @@ void interrupt_handler (void)
 				*(KEY_ptr + 3) = 0; // clear the interrupt
 				
 				if (press & 0x2) // KEY1
-				{printString("PUSHED 1!\n");
-				*(green_LED_ptr) = 4;}
+				{
+				printString("PUSHED 1!\n");
+				*(green_LED_ptr) = 4;
+				}
 				//key_pressed = 1;
 				else if (press & 0x4) // KEY2
-				{printString("PUSHED 2!\n");
-				*(green_LED_ptr) = 16;}
+				{
+				printString("PUSHED 2!\n");
+				*(green_LED_ptr) = 16;
+				}
 				//key_pressed = 2;
 				else // press & 0x8, which is KEY3
-				{printString("PUSHED 3!\n");
-				*(green_LED_ptr) = 64;}
-				//key_pressed = 3;
-
+				{
+				printString("PUSHED 3!\n");
+				*(green_LED_ptr) = 64;
+				}
+				
 		        int i = 0;
 		        while (i <= num_of_processes){
 		          	if (process_array[i].state == PBDEL){

@@ -30,7 +30,7 @@ volatile int* JTAG_UART_ptr; // JTAG UART address
  * Application binary interface documentation says other_pid will be passed into r4
  */
 
- void short_delay (volatile int count)
+ void short_delay (volatile unsigned long count)
 {
 	asm("					;\
 		ldw r4, 0(sp)		;\
@@ -52,7 +52,7 @@ static void Process1 (void)
 {
     for (;;)
     {
-		short_delay(32000);
+		short_delay(4200000000);
         printString("1\n");
         KernelBlock();
     }
@@ -62,7 +62,7 @@ static void Process2 (void)
 {
     for (;;)
     {
-		short_delay(32000);
+		short_delay(4200000000);
         printString("2\n");
         KernelUnblock(1);
         KernelRelinquish();
@@ -114,7 +114,7 @@ static void Process5 (void)
 {
 	for (;;)
 	{	
-		short_delay(32000);
+		short_delay(4200000000);
 		KernelPBBlock();
 		printString("Process_Pressed!\n");
 	}

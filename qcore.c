@@ -14,13 +14,15 @@ DESCRIPTION:	The core of the QUERK kernel. Includes the software interrupt
 #include "quser.h"
 #include "nios2_ctrl_reg_macros.h"
 
-static Process *running_process;
+Process *running_process;
 
-static Queue ready_queue;
+Queue ready_queue;
 
 extern volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
 
-static Process process_array[MAX_NUM_OF_PROCESSES];
+extern Process process_array[MAX_NUM_OF_PROCESSES];
+
+extern char processQueues[7][32];
 
 static char kernel_stack[512];
 
@@ -60,6 +62,19 @@ void ShowReadyQueue (void) {
             p = p->next;
     }
     put_jtag(JTAG_UART_ptr,'\n');
+}
+
+void saveReadyQueue (void) {
+    Process * p = ready_queue.head;
+    int i = 0;
+    int pid = running_process->pid;
+    while (p!=0){
+        processQueues[pid][i] = '0'+p->pid;
+        i++;
+        p = p->next;
+    }
+    processQueues[pid][i] = '\0';
+
 }
 
 /* function to create a new process and add it to the ready queue;
@@ -227,6 +242,8 @@ void interrupt_handler (void)
                 /* showReadyQueue(); */
 	      }
     }
+    /* ShowReadyQueue(); */
+    saveReadyQueue();
 
     /* Fifth task: decide if dispatching of new process is needed. */
     if (need_dispatch)

@@ -83,7 +83,7 @@ static void Process4 (void)
     for (;;)
     {
         /* printString("4\n"); */
-        KernelSendMessage(3, &m);
+        /* KernelSendMessage(3, &m); */
         KernelRelinquish();
     }
 }

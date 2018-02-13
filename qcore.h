@@ -52,5 +52,6 @@ extern void QuenosSWIHandler (void);
 extern void QuenosDispatch (void);
 extern unsigned int process_stack_pointer;
 extern unsigned int ksp;
+extern char processQueues[7][32];
 
 #endif /* _QCORE_H_ */

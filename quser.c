@@ -15,6 +15,7 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 
 #include "quser.h"
 #include "qcore.h"
+#include "nios2_ctrl_reg_macros.h"
 
 #define USER_STACK_SIZE 256
 static  char    TimerProcessStack[USER_STACK_SIZE];
@@ -26,6 +27,7 @@ static  char    P5stack[USER_STACK_SIZE];
 
 
 volatile int* JTAG_UART_ptr; // JTAG UART address
+volatile int *interval_timer_ptr;
 /**
  * Application binary interface documentation says other_pid will be passed into r4
  */
@@ -34,6 +36,10 @@ volatile int* JTAG_UART_ptr; // JTAG UART address
  static void TimerProcess (void) {
 	for (;;)
 	{
+    int status;
+    status = *(interval_timer_ptr + 0x2)+ (*(interval_timer_ptr + 0x3) << 16);
+    put_jtag(JTAG_UART_ptr,'0'+status);
+    //printf("0x%x\n",status);
 		printString("Timer\n");
 		KernelTimerDelay(1000);
 	}

@@ -21,4 +21,5 @@ void QuenosInit (void)
   **/
   NIOS2_WRITE_IENABLE(0x3);
   NIOS2_WRITE_ESTATUS(1);
+  NIOS2_WRITE_STATUS(1);
 }

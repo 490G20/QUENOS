@@ -3,8 +3,7 @@
 /*****************************************************************************/
 /* Macros for accessing the control registers.*/
 /*****************************************************************************/
-#define NIOS2_READ_STATUS(dest)\
-do { dest = __builtin_rdctl(0); } while (0)
+#define NIOS2_READ_STATUS()	   (__builtin_rdctl (0))
 
 //#define NIOS2_WRITE_STATUS(src)\
 //do { __builtin_wrctl(0, src); } while (0)

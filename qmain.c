@@ -20,10 +20,10 @@ DESCRIPTION:	Startup code for the QUERK kernel. Sets software interrupt
 static char NullProcessStack[PROCESS_STACK_SIZE];
 static char TerminalProcessStack[PROCESS_STACK_SIZE];
 
-Process process_array[MAX_NUM_OF_PROCESSES];
-char processQueues[7][32];
+volatile int* JTAG_UART = (int*) 0x10001000;// JTAG UART address
 
-volatile int* JTAG_UART_ptr;
+/* extern Process *process_array_p[MAX_NUM_OF_PROCESSES]; */
+/* char processQueues[7][32]; */
 
 void NullProcess (void)
 {
@@ -38,11 +38,11 @@ void NullProcess (void)
 char get_char( void )
 {
     int data;
-    data = *(JTAG_UART_ptr); // read the JTAG_UART data register
+    data = *(JTAG_UART); // read the JTAG_UART data register
     if (data & 0x00008000) // check RVALID to see if there is new data
         return ((char) data & 0xFF);
     else
-        return '\0';
+        return ('\0');
 }
 
 void append(char* s, char c) {
@@ -64,13 +64,9 @@ void TerminalProcess (void)
     for (;;) {
         char i;
         i = get_char();
-        /* if (i != '\0'){ */
-        /* printString("b:"); */
-        /* put_jtag(JTAG_UART_ptr,i); */
-        /* } */
 
         while (i != '\0') {
-            put_jtag(JTAG_UART_ptr,i);
+            put_jtag(i);
 
             if (i == '\n') {
                 if (strcmp(input, "queue") == 0) {
@@ -91,39 +87,39 @@ void TerminalProcess (void)
                     m.next = 0;
                     m.prev = 0;
                     KernelSendMessage(5, &m);
-                } else if (startsWith("queue ", input)) {
-                    if (isdigit(input[6]))
-                    {
-                        int pid = input[6] - '0';
-                        printString("queue for process ");
-                        put_jtag(JTAG_UART_ptr, '0'+pid);
-                        printString(": ");
-                        printString(processQueues[pid]);
-                        printString("\n");
-                    } else {
-                        printString("Please enter a digit for the queue pid\n");
-                    }
-                } else if (startsWith("state ", input)) {
-                    if (isdigit(input[6]))
-                    {
-                        int pid = input[6] - '0';
-                        printString("state for process ");
-                        put_jtag(JTAG_UART_ptr, '0'+pid);
-                        printString(": ");
-                        if (process_array[pid].state == READY)
-                                printString(" ready\n");
-                        else if (process_array[pid].state == BLOCKED)
-                                printString(" blocked\n");
-                        else if (process_array[pid].state == RUNNING)
-                                printString(" running\n");
-                        else if (process_array[pid].state == WAITING_FOR_MESSAGE)
-                                printString(" waiting for message\n");
-                    } else {
-                        printString("Please enter a digit for the process pid\n");
-                    }
+                /* } else if (startsWith("queue ", input)) { */
+                /*     if (isdigit(input[6])) */
+                /*     { */
+                /*         int pid = input[6] - '0'; */
+                /*         printString("queue for process "); */
+                /*         put_jtag(JTAG_UART_ptr, '0'+pid); */
+                /*         printString(": "); */
+                /*         printString(processQueues[pid]); */
+                /*         printString("\n"); */
+                /*     } else { */
+                /*         printString("Please enter a digit for the queue pid\n"); */
+                /*     } */
+                /* } else if (startsWith("state ", input)) { */
+                /*     if (isdigit(input[6])) */
+                /*     { */
+                /*         int pid = input[6] - '0'; */
+                /*         printString("state for process "); */
+                /*         put_jtag('0'+pid); */
+                /*         printString(": "); */
+                /*         if (process_array_p[pid]->state == READY) */
+                /*                 printString(" ready\n"); */
+                /*         else if (process_array_p[pid]->state == BLOCKED) */
+                /*                 printString(" blocked\n"); */
+                /*         else if (process_array_p[pid]->state == RUNNING) */
+                /*                 printString(" running\n"); */
+                /*         else if (process_array_p[pid]->state == WAITING_FOR_MESSAGE) */
+                /*                 printString(" waiting for message\n"); */
+                /*     } else { */
+                /*         printString("Please enter a digit for the process pid\n"); */
+                /*     } */
                 }
 
-                memset(input, 0, 30);
+                memset(input, 0, sizeof(input));
                 printString("> ");
                 break;
             }

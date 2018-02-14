@@ -14,15 +14,16 @@ DESCRIPTION:	The core of the QUERK kernel. Includes the software interrupt
 #include "quser.h"
 #include "nios2_ctrl_reg_macros.h"
 
-Process *running_process;
+static Process *running_process;
 
-Queue ready_queue;
+static Queue ready_queue;
 
-extern volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
 
-extern Process process_array[MAX_NUM_OF_PROCESSES];
+static Process process_array[MAX_NUM_OF_PROCESSES];
+/* Process *process_array_p[MAX_NUM_OF_PROCESSES] = &process_array; */
 
-extern char processQueues[7][32];
+/* char processQueues[7][32]; */
 
 static char kernel_stack[512];
 
@@ -36,18 +37,22 @@ extern unsigned int ksp = (unsigned int) &kernel_stack[511];
 unsigned int temp_sp;
 unsigned int sp_of_first_process;
 
-void put_jtag(volatile int* JTAG_UART_ptr, char c)
+void put_jtag(char c)
 {
-    while ((*(JTAG_UART_ptr + 1) & 0xFFFF0000) == 0)
-        ;
-    *(JTAG_UART_ptr) = c;
+    /* while ((*(JTAG_UART_ptr + 1) & 0xFFFF0000) == 0) */
+    /*     ; */
+    /* *(JTAG_UART_ptr) = c; */
+    int control;
+    control = *(JTAG_UART_ptr + 1); // read the JTAG_UART control register
+    if (control & 0xFFFF0000) // if space, write character, else ignore
+        *(JTAG_UART_ptr) = c;
 }
 
 void printString(char *text_string)
 {
     int i =0;
     for(i = 0; text_string[i] != 0; ++i){ // print a text string
-        put_jtag (JTAG_UART_ptr, text_string[i]);
+        put_jtag (text_string[i]);
     }
 }
 
@@ -58,24 +63,23 @@ void ShowReadyQueue (void) {
     Process * p = ready_queue.head;
     printString("queue: ");
     while (p!=0){
-            put_jtag(JTAG_UART_ptr,'0'+p->pid);
+            put_jtag('0'+p->pid);
             p = p->next;
     }
-    put_jtag(JTAG_UART_ptr,'\n');
+    put_jtag('\n');
 }
 
-void saveReadyQueue (void) {
-    Process * p = ready_queue.head;
-    int i = 0;
-    int pid = running_process->pid;
-    while (p!=0){
-        processQueues[pid][i] = '0'+p->pid;
-        i++;
-        p = p->next;
-    }
-    processQueues[pid][i] = '\0';
-
-}
+/* void saveReadyQueue (int requestType) { */
+/*     Process * p = ready_queue.head; */
+/*     int i = 0; */
+/*     int pi = running_process->pid; */
+/*     while (p!=0){ */
+/*         processQueues[pi][i] = '0'+p->pid; */
+/*         i++; */
+/*         p = p->next; */
+/*     } */
+/*     processQueues[pi][i] = '\0'; */
+/* } */
 
 /* function to create a new process and add it to the ready queue;
    initial contents of stack are set using stackframe structure */
@@ -209,7 +213,6 @@ void interrupt_handler (void)
                     process_array[target_pid].state = READY;
                     AddToTail (&ready_queue, &process_array[target_pid]);
 
-
                     Message *current_message;
                     unsigned int* casted_target_sp = (unsigned int*) process_array[target_pid].user_stack_pointer;
                     current_message = DequeueMessageHead(&process_array[target_pid].m_queue);
@@ -243,7 +246,7 @@ void interrupt_handler (void)
 	      }
     }
     /* ShowReadyQueue(); */
-    saveReadyQueue();
+    /* saveReadyQueue(requestType); */
 
     /* Fifth task: decide if dispatching of new process is needed. */
     if (need_dispatch)

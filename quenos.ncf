@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nios2_config version="1.0">
+    <system>
+        <system_info filepath="true">../../../altera/13.0/University_Program/NiosII_Computer_Systems/DE2-115/DE2-115_Media_Computer/verilog/nios_system.qsys</system_info>
+        <sample_system_title>DE2-115 Media Computer</sample_system_title>
+        <system_sof filepath="true">../../../altera/13.0/University_Program/NiosII_Computer_Systems/DE2-115/DE2-115_Media_Computer/verilog/DE2_115_Media_Computer.sof</system_sof>
+        <system_jdi filepath="true"/>
+        <cable>USB-Blaster [1-6]</cable>
+        <processor JTAGHubInstanceID="0">CPU</processor>
+        <elf_section name="text">
+            <memory_device>SDRAM/s1</memory_device>
+            <memory_start_offset>4096</memory_start_offset>
+        </elf_section>
+        <elf_section name="data">
+            <memory_device>SDRAM/s1</memory_device>
+            <memory_start_offset>65536</memory_start_offset>
+        </elf_section>
+        <terminal JTAGHubInstanceID="0">JTAG_UART</terminal>
+    </system>
+    <program>
+        <type>C</type>
+        <options>
+            <source_files>
+                <source_file filepath="true">exception_handler.c</source_file>
+                <source_file filepath="true">nios2_ctrl_reg_macros.h</source_file>
+                <source_file filepath="true">qcore.c</source_file>
+                <source_file filepath="true">qcore.h</source_file>
+                <source_file filepath="true">qinit.c</source_file>
+                <source_file filepath="true">qinit.h</source_file>
+                <source_file filepath="true">qmain.c</source_file>
+                <source_file filepath="true">queue.c</source_file>
+                <source_file filepath="true">queue.h</source_file>
+                <source_file filepath="true">quser.c</source_file>
+                <source_file filepath="true">quser.h</source_file>
+                <source_file filepath="true">request.s</source_file>
+            </source_files>
+            <compiler_flags>-g -O1 -ffunction-sections -fverbose-asm -fno-inline</compiler_flags>
+            <emulate_unimpl_instructions>true</emulate_unimpl_instructions>
+            <use_small_c_library>false</use_small_c_library>
+        </options>
+    </program>
+</nios2_config>

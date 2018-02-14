@@ -23,7 +23,6 @@ static char P3stack[USER_STACK_SIZE];
 static char P4stack[USER_STACK_SIZE];
 static char P5stack[USER_STACK_SIZE];
 
-volatile int* JTAG_UART_ptr; // JTAG UART address
 /**
  * Application binary interface documentation says other_pid will be passed into r4
  */
@@ -83,7 +82,7 @@ static void Process4 (void)
     for (;;)
     {
         /* printString("4\n"); */
-        /* KernelSendMessage(3, &m); */
+        KernelSendMessage(3, &m);
         KernelRelinquish();
     }
 }
@@ -98,7 +97,7 @@ static void Process5 (void)
             printString("Process 5 recieved this message: ");
             int i;
             for (i=0; i < strlen(m->data); i++) {
-                put_jtag(JTAG_UART_ptr, m->data[i]);
+                put_jtag(m->data[i]);
             }
             printString("\n");
 
@@ -110,9 +109,9 @@ void UserProcesses (void)
 {
     QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
-    QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE );
-    QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE );
-    QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE );
+    QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE);
+    QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE);
+    QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE);
 }
 
 /*----------------------------------------------------------------*/

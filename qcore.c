@@ -18,7 +18,7 @@ static Process *running_process;
 
 static Queue ready_queue;
 
-extern volatile int* JTAG_UART_ptr = (int*) 0x10001000;// JTAG UART address
+volatile unsigned int* JTAG_UART_ptr = (unsigned int*) 0x10001000;// JTAG UART address
 
 static Process process_array[MAX_NUM_OF_PROCESSES];
 
@@ -34,7 +34,7 @@ extern unsigned int ksp = (unsigned int) &kernel_stack[511];
 unsigned int temp_sp;
 unsigned int sp_of_first_process;
 
-void put_jtag(volatile int* JTAG_UART_ptr, char c)
+void put_jtag(volatile unsigned int* JTAG_UART_ptr, unsigned int c)
 {
     while ((*(JTAG_UART_ptr + 1) & 0xFFFF0000) == 0)
         ;
@@ -194,7 +194,6 @@ void interrupt_handler (void)
                     process_array[target_pid].state = READY;
                     AddToTail (&ready_queue, &process_array[target_pid]);
 
-
                     Message *current_message;
                     unsigned int* casted_target_sp = (unsigned int*) process_array[target_pid].user_stack_pointer;
                     current_message = DequeueMessageHead(&process_array[target_pid].m_queue);
@@ -203,6 +202,7 @@ void interrupt_handler (void)
 
                 running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
+                need_dispatch = 1;
                 /* showReadyQueue(); */
 	    }
             else if (requestType == READ_MESSAGE){
@@ -217,6 +217,7 @@ void interrupt_handler (void)
                     AddToTail(&ready_queue, running_process);
                     // Store address of current message into where the expected saved value of r2
                     *(casted_prev_sp+2) = current_message;
+                    need_dispatch = 1;
                 }
                 else {
                     running_process->state = WAITING_FOR_MESSAGE;

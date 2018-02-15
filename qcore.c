@@ -63,7 +63,8 @@ void showReadyQueue (void)
             put_jtag(JTAG_UART_ptr,'0'+p->pid);
             p = p->next;
     }
-    put_jtag(JTAG_UART_ptr,'\n');
+    put_jtag(JTAG_UART_ptr,'\t');
+    put_jtag(JTAG_UART_ptr,'\t');
 }
 
 
@@ -98,12 +99,11 @@ void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack
     asm ("ldw r13, 0(r12)");
     asm ("stw gp, 104(r13)");
 
-    printString("NP \n");
-    showReadyQueue();
+    //showReadyQueue();
 
     AddToTail (&ready_queue, new_process);
 
-    showReadyQueue();
+    //showReadyQueue();
 }
 
 /* functions for kernel services */
@@ -185,7 +185,9 @@ static int QuenosCorePBUnblock (int other_pid)
 // It is also called indirectly by the_exception(), the software interrupt
 void interrupt_handler (void)
 {
+  #ifndef DEMO
     printString("i\n");
+    #endif
 	// First task: Update process control block for running process with stackpointer
     running_process->user_stack_pointer = (void*) process_stack_pointer;
     unsigned int* casted_prev_sp = (unsigned int*) running_process->user_stack_pointer;
@@ -256,35 +258,45 @@ void interrupt_handler (void)
     }
     else {
             if (requestType == RELINQUISH) {
+              #ifndef DEMO
                 printString("r\n");
-                showReadyQueue(); // Versioning bug: ready queue used to be garbage when dealing with null process
+                #endif
+                //showReadyQueue(); // Versioning bug: ready queue used to be garbage when dealing with null process
                 running_process->state = READY;
                 AddToTail(&ready_queue, running_process);
                 need_dispatch = 1;       /* need dispatch of new process */
                 showReadyQueue();
             }
             else if (requestType == BLOCK_SELF) {
+              #ifndef DEMO
                 printString("blk\n");
-                showReadyQueue();
+                #endif
+                //showReadyQueue();
                 need_dispatch = QuenosCoreBlockSelf();
                 showReadyQueue();
             }
 			else if (requestType == PB_BLOCK) {
+        #ifndef DEMO
                 printString("PBBlock\n");
-                showReadyQueue();
+                #endif
+                //showReadyQueue();
                 need_dispatch = QuenosCorePBBlockSelf();
                 showReadyQueue();
             }
             else if (requestType == UNBLOCK){
                 int other_pid = *(casted_prev_sp+4);
+                #ifndef DEMO
                 printString("unblk\n");
-                showReadyQueue();
+                #endif
+                //showReadyQueue();
                 need_dispatch = QuenosCoreUnblock(other_pid);
                 showReadyQueue();
             }
             else if (requestType == SEND_MESSAGE){
+              #ifndef DEMO
                 printString("send\n");
-                showReadyQueue();
+                #endif
+                //showReadyQueue();
                 int target_pid = *(casted_prev_sp+4);
                 Message *messageToSend = *(casted_prev_sp+6);
                 AddMessageToTail(&process_array[target_pid].m_queue, messageToSend);
@@ -305,8 +317,10 @@ void interrupt_handler (void)
                 showReadyQueue();
 	    }
             else if (requestType == READ_MESSAGE){
+              #ifndef DEMO
                 printString("readin\n");
-                showReadyQueue();
+                #endif
+                //showReadyQueue();
                 need_dispatch = 0;
                 Message *current_message;
                 current_message = DequeueMessageHead(&running_process->m_queue);
@@ -326,7 +340,9 @@ void interrupt_handler (void)
                 showReadyQueue();
 	      }
         else if (requestType == TIMER_DELAY){
-				printString("td\n");
+          #ifndef DEMO
+				printString("timer delay\n");
+        #endif
                 // Set the timer using the time we passed in 
                 unsigned int msec = *(casted_prev_sp+4); //currently assumes only one process is running
                 unsigned int counter = msec * 50000;
@@ -338,6 +354,7 @@ void interrupt_handler (void)
                 running_process->interrupt_delay = counter;
                 
 				need_dispatch = QuenosCoreTimerDelay();
+        showReadyQueue();
                 
         }
     }
@@ -347,7 +364,7 @@ void interrupt_handler (void)
     {
           running_process = DequeueHead(&ready_queue);
           running_process->state = RUNNING;
-          printString("CP: ");
+          printString("Current Process: ");
           put_jtag(JTAG_UART_ptr,'0'+running_process->pid);
           put_jtag(JTAG_UART_ptr,'\n');
     }
@@ -361,13 +378,15 @@ void interrupt_handler (void)
    to generate a return-from-interrupt instruction. */
 void QuenosDispatch (void)
 {
+  #ifndef DEMO
     printString("QD\n");
-    showReadyQueue();
+    #endif
+    //showReadyQueue();
 
     running_process = DequeueHead (&ready_queue);
     running_process->state = RUNNING;
 
-    showReadyQueue();
+    //showReadyQueue();
     sp_of_first_process = (unsigned int)running_process->user_stack_pointer;
 
     asm("movia r12, sp_of_first_process");

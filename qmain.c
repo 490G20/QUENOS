@@ -19,7 +19,9 @@ DESCRIPTION:	Startup code for the QUERK kernel. Sets software interrupt
 static char NullProcessStack[PROCESS_STACK_SIZE];
 static char TerminalProcessStack[PROCESS_STACK_SIZE];
 
-volatile int* JTAG_UART_ptr;
+extern volatile unsigned int* JTAG_UART_ptr;
+
+void put_jtag(volatile unsigned int* JTAG_UART_ptr, unsigned int c);
 
 void NullProcess (void)
 {
@@ -33,10 +35,10 @@ void NullProcess (void)
 
 char get_char( void )
 {
-    int data;
+    unsigned int data;
     data = *(JTAG_UART_ptr); // read the JTAG_UART data register
     if (data & 0x00008000) // check RVALID to see if there is new data
-        return ((char) data & 0xFF);
+        return (data & 0xFF);
     else
         return '\0';
 }
@@ -57,11 +59,12 @@ void TerminalProcess (void)
 {
     char input[30];
     printString("> ");
+    input[0] = '\0';
     for (;;) {
         char i;
         i = get_char();
 
-        while (i != '\0') {
+        while (i != '\0' && i < 128 && i > 0) {
             put_jtag(JTAG_UART_ptr,i);
 
             if (i == '\n') {
@@ -85,12 +88,14 @@ void TerminalProcess (void)
                     KernelSendMessage(5, &m);
                 }
 
-                memset(input, 0, sizeof(input));
+                input[0] = '\0';
                 printString("> ");
                 break;
             }
 
-            append(input, i);
+            if (i < 128 && i > 0){
+                append(input, i);
+            }
             i = get_char();
         }
 

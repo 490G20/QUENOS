@@ -43,7 +43,7 @@ volatile int* JTAG_UART_ptr; // JTAG UART address
  static void TimerProcess (void) {
 	for (;;)
 	{
-		printString("Timer\t");
+		printString("1\t");
 		KernelTimerDelay(10000);
 	}
  }
@@ -53,7 +53,7 @@ static void Process1 (void)
     for (;;)
     {
 		short_delay(42000000);
-        printString("1\t");
+        printString("2\t");
         KernelBlock();
     }
 }
@@ -63,7 +63,7 @@ static void Process2 (void)
     for (;;)
     {
 		short_delay(42000000);
-        printString("2\t");
+        printString("3\t");
         KernelUnblock(1);
         KernelRelinquish();
     }
@@ -115,7 +115,7 @@ static void Process5 (void)
 	for (;;)
 	{	
 		short_delay(42000000);
-    printString("2\t");
+    printString("4\t");
 		KernelPBBlock();
 		printString("Process_Pressed!\n");
 	}

@@ -364,7 +364,7 @@ void interrupt_handler (void)
     {
           running_process = DequeueHead(&ready_queue);
           running_process->state = RUNNING;
-          printString("Current Process: ");
+          printString("Next Process: ");
           put_jtag(JTAG_UART_ptr,'0'+running_process->pid);
           put_jtag(JTAG_UART_ptr,'\n');
     }

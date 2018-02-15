@@ -21,6 +21,7 @@ static char NullProcessStack[NULL_PROCESS_STACK_SIZE];
 void NullProcess (void)
 {
   for (;;) {
+    printString("0\t");
     KernelRelinquish ();	/* null process simply surrenders processor */
   }
 }

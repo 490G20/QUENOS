@@ -11,16 +11,14 @@ DESCRIPTION:	Declarations for process descriptor queue management functions.
 ******************************************************************************/
 #include "qcore.h"
 
-typedef struct  _queue
+typedef struct _queue
 {
-        Process     *head;
-        Process     *tail;
+  Process     *head;
+  Process     *tail;
 } Queue;
 
-extern  void    AddToTail (Queue *queue, Process *process);
-extern  Process     *DequeueHead (Queue *queue);
-
-// Moved message queue to qcore
+extern void AddToTail (Queue *queue, Process *process);
+extern Process *DequeueHead (Queue *queue);
 
 #endif /* _QUEUE_H_ */
 

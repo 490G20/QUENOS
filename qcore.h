@@ -11,46 +11,45 @@ DESCRIPTION:	Type definitions and function declarations for core of
 		Queen's University
 ******************************************************************************/
 
+#define MAX_NUM_OF_PROCESSES 16
+
 typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE, DELAYED, PBDEL} State;
 
-typedef struct _message {
-	struct _message *prev;
-	struct _message *next;
-	unsigned char data[32]; // Revise into hardcoded, and do dynamic mem allocation later if necessary for proof of concept
+typedef struct _message
+{
+  struct _message *prev;
+  struct _message *next;
+  unsigned char data[32];
 } Message;
 
 // MessageQueue is essentially identical to the (process) queue, except it is for Message objects (structs)
-typedef struct _messageQueue { // watch the capital?
-    Message *head;
-    Message *tail;
+typedef struct _messageQueue
+{
+  Message *head;
+  Message *tail;
 } MessageQueue;
 
 extern void AddMessageToTail(MessageQueue *queue, Message *message);
 extern Message *DequeueMessageHead (MessageQueue *queue);
 
-typedef struct  _process // Formerly _pdb
+typedef struct  _process
 {
-        unsigned int program_address;
-        struct  _process    *prev;
-        struct  _process    *next;
-        int     pid; // process id
-        State   state;
-        unsigned int interrupt_delay;
-		// TODO: Best to name user stack pointer or stack pointer? formerly just SP
-        void    *user_stack_pointer;		/* saves user stack pointer when not running */
+  unsigned int program_address;
+  struct  _process    *prev;
+  struct  _process    *next;
+  int     pid;
+  State   state;
+  unsigned int interrupt_delay;
+  void    *user_stack_pointer;
 
-        struct _messageQueue m_queue; // Move elsewhere if debugging with hairy pointer math
-} Process; // Formerly pdb
+  struct _messageQueue m_queue;
+} Process;
 
-#define MAX_NUM_OF_PROCESSES 16
-
-extern void QuenosNewProcess (void (*entry_point) (void),
-				 char *stack_bottom, int stack_size);
+extern void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack_size);
 extern void ShowReadyQueue (void);
-
 extern void QuenosSWIHandler (void);
-
 extern void QuenosDispatch (void);
+
 extern unsigned int process_stack_pointer;
 extern unsigned int ksp;
 

@@ -1,29 +1,4 @@
-/* 
-   This file is a portion of the original code supplied by Altera.
-
-   It has been adapted by N. Manjikian for use in ELEC 371 laboratory work.
-
-   Various unnecessary or extraneous elements have been excluded. For
-   example, declarations in C for external functions called from asm()
-   instructions are not required because any reference to external names
-   in asm() instructions is embedded directly in the output written to
-   the assembly-language .s file without any other checks by the C compiler.
-
-   There is one particularly important change: on _reset_, the jump must be
-   to the >> _start << location in order to properly initialize the stack
-   pointer and to perform other crucial initialization tasks that ensure
-   proper C semantics for variable initialization are enforced. The Altera
-   version of the code jumped to main(), which will _not_ perform these
-   crucial initialization tasks correctly.
-
-   Finally, a reference to control register 'ctl4' in the asm() sequence
-   has been replaced with the more meaningful alias 'ipending' for clarity.
-
-   Other than the changes described above, the file contents have also been
-   reformatted to fit in 80 columns of text, and comments have been edited.
-*/
-
-unsigned int process_stack_pointer; //no static, is default global
+unsigned int process_stack_pointer;
 unsigned int ksp;
 
 /* The assembly language code below handles processor reset */
@@ -101,6 +76,7 @@ void the_exception (void)
 
   asm ("addi	fp,  sp, 128"); /* frame pointer adjustment */
 
+  // Save the process stack pointer into the variable
   asm ("movia r22, process_stack_pointer");
   asm ("stw sp, 0(r22)");
 
@@ -114,8 +90,8 @@ void the_exception (void)
   asm ("movia r23, ksp");
   asm ("stw sp, 0(r23)");
 
-  //move process stack pointer address into a register
-  //store register sp contents into that memory address
+  // Move process stack pointer address into a register
+  // store register sp contents into that memory address
   asm ("movia r21, process_stack_pointer");
   asm ("ldw sp, 0(r21)");
 

@@ -9,7 +9,7 @@ DESCRIPTION:	Definition of function for initialization on startup.
 
 #include "nios2_ctrl_reg_macros.h"
 
-volatile int * KEY_ptr = (int *) 0x10000050;
+volatile int *KEY_ptr = (int *)0x10000050;
 
 void QuenosInit (void)
 {
@@ -21,7 +21,7 @@ void QuenosInit (void)
   Bit 10: Serial port
   Bit 8/9(?): JTAG port
   **/
- *(KEY_ptr + 2) = 0xE;
+  *(KEY_ptr + 2) = 0xE;
   NIOS2_WRITE_IENABLE(0x0703);
   NIOS2_WRITE_ESTATUS(1);
 }

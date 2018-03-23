@@ -11,7 +11,7 @@ DESCRIPTION:	Type definitions and function declarations for core of
 		Queen's University
 ******************************************************************************/
 
-typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE} State;
+typedef enum {READY, RUNNING, BLOCKED, WAITING_FOR_MESSAGE, DELAYED, PBDEL} State;
 
 typedef struct _message {
 	struct _message *prev;
@@ -35,6 +35,7 @@ typedef struct  _process // Formerly _pdb
         struct  _process    *next;
         int     pid; // process id
         State   state;
+        unsigned int interrupt_delay;
 		// TODO: Best to name user stack pointer or stack pointer? formerly just SP
         void    *user_stack_pointer;		/* saves user stack pointer when not running */
 

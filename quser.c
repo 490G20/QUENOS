@@ -17,6 +17,8 @@ DESCRIPTION:	Definitions of functions for user processes, including a
 #include "qcore.h"
 
 #define USER_STACK_SIZE 256
+
+static  char    TimerProcessStack[USER_STACK_SIZE];
 static char P1stack[USER_STACK_SIZE];
 static char P2stack[USER_STACK_SIZE];
 static char P3stack[USER_STACK_SIZE];
@@ -28,11 +30,30 @@ volatile int* JTAG_UART_ptr; // JTAG UART address
  * Application binary interface documentation says other_pid will be passed into r4
  */
 
+ void short_delay (volatile unsigned long count)
+{
+	asm("					;\
+		ldw r4, 0(sp)		;\
+	loop:					;\
+		subi r4, r4, 1		;\
+		bne r4, r0, loop	;\
+	");
+}
+
+ static void TimerProcess (void) {
+	for (;;)
+	{
+		printString("1\t");
+		KernelTimerDelay(10000);
+	}
+ }
+ 
 static void Process1 (void)
 {
     for (;;)
     {
-        /* printString("1\n"); */
+	short_delay(42000000);
+        printString("2\t");
         KernelBlock();
     }
 }
@@ -41,12 +62,13 @@ static void Process2 (void)
 {
     for (;;)
     {
-        /* printString("2\n"); */
+	short_delay(42000000);
+        printString("3\t");
         KernelUnblock(1);
         KernelRelinquish();
     }
 }
-
+/*
 static void Process3 (void)
 {
         for (;;)
@@ -87,6 +109,17 @@ static void Process4 (void)
         KernelRelinquish();
     }
 }
+*/
+static void Process5 (void)
+{
+	for (;;)
+	{	
+		short_delay(42000000);
+    printString("4\t");
+		KernelPBBlock();
+		printString("Process_Pressed!\n");
+	}
+}
 
 static void Process5 (void)
 {
@@ -108,11 +141,13 @@ static void Process5 (void)
 
 void UserProcesses (void)
 {
+    QuenosNewProcess (TimerProcess, TimerProcessStack, USER_STACK_SIZE);
     QuenosNewProcess (Process1, P1stack, USER_STACK_SIZE);
     QuenosNewProcess (Process2, P2stack, USER_STACK_SIZE);
     QuenosNewProcess (Process3, P3stack, USER_STACK_SIZE );
     QuenosNewProcess (Process4, P4stack, USER_STACK_SIZE );
     QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE );
+    QuenosNewProcess (Process5, P5stack, USER_STACK_SIZE);
 }
 
 /*----------------------------------------------------------------*/

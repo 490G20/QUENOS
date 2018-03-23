@@ -26,6 +26,7 @@ void put_jtag(volatile unsigned int* JTAG_UART_ptr, unsigned int c);
 void NullProcess (void)
 {
   for (;;) {
+    printString("0\t");
     KernelRelinquish ();	/* null process simply surrenders processor */
   }
 }

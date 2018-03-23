@@ -8,6 +8,8 @@
 #.type KernelUnblock, @function
 .global KernelSendMessage
 .global KernelReadMessage
+.global KernelTimerDelay
+.global KernelPBBlock
 
 
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
@@ -69,3 +71,24 @@ KernelReadMessage:
     ldw r5, 0(sp)
     addi sp,sp,4
     ret
+
+KernelTimerDelay:
+    #Expect otherpid in r4 according to altera nios 2 application binary interface
+    subi sp, sp, 8
+    stw r5, 4(sp)
+    stw r4, 0(sp)
+    movi r5,5 #Timer Delay enum
+    trap
+    ldw r5, 4(sp)
+    ldw r4, 0(sp)
+    addi sp,sp,8
+	ret
+	
+KernelPBBlock:
+    subi sp, sp, 4
+    stw r5, 0(sp)
+    movi r5,6 #block self enum
+    trap
+    ldw r5, 0(sp)
+    addi sp,sp,4
+	ret

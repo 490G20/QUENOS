@@ -195,7 +195,6 @@ void interrupt_handler (void)
 
     if (ipending)
     {
-      // This currently has no actions, but this will never be called. It will always go to the else since there are no hardware interrupts yet
       if (ipending & 0x1)
       {
         // clear the interrupt

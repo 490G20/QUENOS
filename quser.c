@@ -42,7 +42,7 @@ static void Process1(void)
 {
   for (;;)
   {
-    /* short_delay(5); */
+    short_delay(5);
     KernelBlock();
   }
 }
@@ -63,7 +63,7 @@ static void Process3(void)
 {
   for (;;)
   {
-    /* short_delay(5); */
+    short_delay(5);
     Message *m;
     m = KernelReadMessage();
 
@@ -72,9 +72,10 @@ static void Process3(void)
     {
       int i;
       for (i=0; i < strlen(m->data); i++) {
-        put_jtag(JTAG_UART_ptr, m->data[i]);
+        // The print is commented out so that it will not spam the message to the terminal
+        /* put_jtag(JTAG_UART_ptr, m->data[i]); */
       }
-      printString("\n");
+      /* printString("\n"); */
     }
     else
     {
@@ -100,7 +101,7 @@ static void Process4(void)
 
   for (;;)
   {
-    /* short_delay(5); */
+    short_delay(5);
     KernelSendMessage(3, &m);
     KernelRelinquish();
   }
@@ -111,9 +112,8 @@ static void Process5(void)
 {
   for (;;)
   {
-    /* short_delay(5); */
+    short_delay(5);
     KernelPBBlock();
-    printString("Process_Pressed!\n");
   }
 }
 

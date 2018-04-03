@@ -47,7 +47,6 @@ typedef struct  _process
 
 extern void QuenosNewProcess (void (*entry_point) (void), char *stack_bottom, int stack_size);
 extern void ShowReadyQueue (void);
-extern void QuenosSWIHandler (void);
 extern void QuenosDispatch (void);
 
 extern unsigned int process_stack_pointer;

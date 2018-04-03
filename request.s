@@ -1,16 +1,12 @@
 .section .text
 
 .global KernelRelinquish
-#.type KernelRelinquish, @function
 .global KernelBlock
-#.type KernelBlock, @function
 .global KernelUnblock
-#.type KernelUnblock, @function
 .global KernelSendMessage
 .global KernelReadMessage
 .global KernelTimerDelay
 .global KernelPBBlock
-
 
 #qrequest.s contains functions to set up relevant information when requesting kernel service.
 # We enter the kernel using trap, and expect the ?xception handler to automatically save everything onto the stack for us
@@ -19,7 +15,7 @@
 KernelRelinquish:
     subi sp, sp, 4
     stw r5, 0(sp)
-    movi r5,0 #relinquish enum, TODO: Ask if this enum should start at 1 for possibility of 0 being a common garbage value that could be misread
+    movi r5,0 #relinquish enum
     trap
     ldw r5, 0(sp)
     addi sp,sp,4
@@ -66,8 +62,8 @@ KernelReadMessage:
     stw r5, 0(sp)
     movi r5, 4 # read message enum
     trap
-    # We will expect (and accept) that the interrupt handler method called by exception_handler.c will overwrite the values to load
-    # into r2
+    # We will expect (and accept) that the interrupt handler method called by exception_handler.c will overwrite the
+    # values to load into r2
     ldw r5, 0(sp)
     addi sp,sp,4
     ret

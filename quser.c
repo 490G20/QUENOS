@@ -22,7 +22,8 @@ static char P2stack[USER_STACK_SIZE];
 static char P3stack[USER_STACK_SIZE];
 static char P4stack[USER_STACK_SIZE];
 static char P5stack[USER_STACK_SIZE];
-static char TimerProcessStack[USER_STACK_SIZE];
+static char P6stack[USER_STACK_SIZE];
+static char P7stack[USER_STACK_SIZE];
 
 volatile int* JTAG_UART_ptr; // JTAG UART address
 
@@ -36,19 +37,12 @@ void short_delay(volatile unsigned long count)
   ");
 }
 
-static void TimerProcess(void) {
-  for (;;)
-  {
-    KernelTimerDelay(10000);
-  }
-}
-
 // Process 1 simply blocks itself
 static void Process1(void)
 {
   for (;;)
   {
-    short_delay(42000000);
+    /* short_delay(5); */
     KernelBlock();
   }
 }
@@ -58,7 +52,7 @@ static void Process2(void)
 {
   for (;;)
   {
-    short_delay(42000000);
+    /* short_delay(5); */
     KernelUnblock(1);
     KernelRelinquish();
   }
@@ -69,7 +63,7 @@ static void Process3(void)
 {
   for (;;)
   {
-    short_delay(42000000);
+    /* short_delay(5); */
     Message *m;
     m = KernelReadMessage();
 
@@ -106,7 +100,7 @@ static void Process4(void)
 
   for (;;)
   {
-    short_delay(42000000);
+    /* short_delay(5); */
     KernelSendMessage(3, &m);
     KernelRelinquish();
   }
@@ -117,7 +111,7 @@ static void Process5(void)
 {
   for (;;)
   {
-    short_delay(42000000);
+    /* short_delay(5); */
     KernelPBBlock();
     printString("Process_Pressed!\n");
   }
@@ -141,14 +135,23 @@ static void Process6(void)
   }
 }
 
+// Process 7 waits for a timer interrupt
+static void Process7(void) {
+  for (;;)
+  {
+    KernelTimerDelay(10000);
+  }
+}
+
+
 // Called from main program at startup
 void UserProcesses(void)
 {
-  QuenosNewProcess(TimerProcess, TimerProcessStack, USER_STACK_SIZE);
   QuenosNewProcess(Process1, P1stack, USER_STACK_SIZE);
   QuenosNewProcess(Process2, P2stack, USER_STACK_SIZE);
   QuenosNewProcess(Process3, P3stack, USER_STACK_SIZE);
   QuenosNewProcess(Process4, P4stack, USER_STACK_SIZE);
   QuenosNewProcess(Process5, P5stack, USER_STACK_SIZE);
-  QuenosNewProcess(Process6, P5stack, USER_STACK_SIZE);
+  QuenosNewProcess(Process6, P6stack, USER_STACK_SIZE);
+  QuenosNewProcess(Process7, P7stack, USER_STACK_SIZE);
 }

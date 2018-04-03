@@ -112,7 +112,7 @@ void TerminalProcess(void)
           m.prev = 0;
 
           // Sends the message
-          KernelSendMessage(5, &m);
+          KernelSendMessage(6, &m);
         }
 
         // Resets the input character array to an empty character

@@ -60,8 +60,7 @@ void ShowReadyQueue(void) {
     put_jtag(JTAG_UART_ptr,'0'+p->pid);
     p = p->next;
   }
-  put_jtag(JTAG_UART_ptr,'\t');
-  put_jtag(JTAG_UART_ptr,'\t');
+  put_jtag(JTAG_UART_ptr,'\n');
 }
 
 

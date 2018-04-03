@@ -23,10 +23,14 @@
             <source_files>
                 <source_file filepath="true">exception_handler.c</source_file>
                 <source_file filepath="true">qcore.c</source_file>
+                <source_file filepath="true">qcore.h</source_file>
                 <source_file filepath="true">qinit.c</source_file>
+                <source_file filepath="true">qinit.h</source_file>
                 <source_file filepath="true">qmain.c</source_file>
                 <source_file filepath="true">queue.c</source_file>
+                <source_file filepath="true">queue.h</source_file>
                 <source_file filepath="true">quser.c</source_file>
+                <source_file filepath="true">quser.h</source_file>
                 <source_file filepath="true">request.s</source_file>
             </source_files>
             <compiler_flags>-g -O1 -ffunction-sections -fverbose-asm -fno-inline</compiler_flags>
